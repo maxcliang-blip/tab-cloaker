@@ -4,64 +4,114 @@
     <title>Google Classroom</title>
     <link rel="icon" type="image/png" href="https://ssl.gstatic.com">
     <style>
-        /* Hidden by default until password is correct */
-        #mainUI { display: none; }
-        body { background: #111; color: white; font-family: sans-serif; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .container { background: #222; padding: 30px; border-radius: 10px; text-align: center; border: 1px solid #444; width: 450px; }
-        input { display: block; width: 90%; padding: 12px; margin: 10px auto; border-radius: 5px; border: 1px solid #555; background: #000; color: #0f0; font-family: monospace; }
-        button { padding: 12px 25px; cursor: pointer; background: #1a73e8; color: white; border: none; border-radius: 5px; font-weight: bold; width: 100%; margin-top: 10px; }
-        .info { font-size: 0.8rem; color: #888; margin-top: 15px; text-align: left; }
-        select { background: #333; color: white; padding: 8px; border-radius: 5px; width: 100%; margin-top: 5px; border: 1px solid #555; }
+        body { background: #111; color: white; font-family: sans-serif; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .container { background: #222; padding: 30px; border-radius: 10px; text-align: center; border: 1px solid #444; width: 480px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        #mainUI { display: none; } 
+        
+        input, select { display: block; width: 90%; padding: 12px; margin: 8px auto; border-radius: 5px; border: 1px solid #555; background: #000; color: #0f0; font-family: monospace; }
+        select { color: white; width: 95%; background: #333; }
+        
+        button { padding: 10px 20px; cursor: pointer; background: #1a73e8; color: white; border: none; border-radius: 5px; font-weight: bold; margin-top: 5px; }
+        .launch-btn { width: 100%; padding: 15px; background: #34a853; font-size: 1.1rem; margin-top: 15px; }
+        
+        #favList { margin-top: 10px; text-align: left; background: #111; border-radius: 5px; padding: 10px; border: 1px solid #333; max-height: 120px; overflow-y: auto; }
+        .fav-item { display: flex; justify-content: space-between; align-items: center; padding: 4px; border-bottom: 1px solid #222; font-size: 0.8rem; }
+        .fav-item.hidden { display: none; }
+        .fav-link { color: #4285F4; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 80%; }
+        
+        .info { font-size: 0.75rem; color: #888; margin-top: 15px; text-align: left; line-height: 1.4; }
+        label { display: block; text-align: left; margin: 8px 20px 0 20px; font-size: 0.85rem; color: #bbb; font-weight: bold; }
+        .del-btn { color: #ea4335; background: none; border: none; cursor: pointer; font-size: 1.1rem; }
     </style>
 </head>
 <body>
 
-    <!-- 1. PASSWORD SCREEN -->
     <div id="passwordScreen" class="container">
         <h1>Classes</h1>
-        <p>Enter Access Key:</p>
-        <input type="password" id="passInput" placeholder="Password...">
-        <button onclick="checkPass()">Unlock</button>
+        <input type="password" id="passInput" placeholder="Access Key...">
+        <button onclick="checkPass()">Unlock Elite Cloaker</button>
     </div>
 
-    <!-- 2. MAIN CLOAKER UI -->
     <div id="mainUI" class="container">
-        <h1>Cloaker v10 (Ultimate)</h1>
-        <input type="text" id="urlInput" value="https://www.wikipedia.org">
+        <h1>Cloaker v14 (Custom Panic)</h1>
         
-        <label>Panic Key Destination:</label>
-        <select id="panicMode">
-            <option value="https://classroom.google.com">Google Classroom</option>
-            <option value="https://www.google.com">Google Search</option>
-            <option value="close">Instant Close</option>
-        </select>
+        <label>1. Target Site:</label>
+        <div style="display: flex; gap: 5px; padding: 0 20px;">
+            <input type="text" id="urlInput" value="https://www.wikipedia.org" style="width: 75%; margin: 0;">
+            <button onclick="saveLink()" style="margin: 0; width: 25%;">Save</button>
+        </div>
 
-        <button onclick="launch()">Launch Encrypted Cloak</button>
+        <div style="padding: 0 20px; margin-top: 5px;">
+            <input type="text" id="searchFavs" placeholder="Search saved..." oninput="filterFavs()" style="padding: 8px; font-size: 0.8rem; margin-bottom: 0;">
+            <div id="favList"></div>
+        </div>
+        
+        <label>2. Custom Escape Link (Panic Redirect):</label>
+        <input type="text" id="customPanic" placeholder="https://classroom.google.com" value="https://classroom.google.com">
+
+        <button class="launch-btn" onclick="launch()">Launch Encrypted Tab</button>
         
         <div class="info">
-            • <b>Master Key</b>: Password protection active.<br>
-            • <b>Anti-Close</b>: Shield enabled in new tab.<br>
-            • <b>Stealth</b>: Instant switch to "My Drive" on tab-out.<br>
-            • <b>Panic</b>: Press <b> \ </b> (Backslash) inside the tab.
+            • <b>Escape Link</b>: The URL loaded when you hit the Panic Key.<br>
+            • <b>Panic Key</b>: Press <b> \ </b> (Backslash) in the new tab.<br>
+            • <b>Stealth</b>: Instantly switches to "My Drive" when tab is hidden.
         </div>
     </div>
 
     <script>
-        // SET YOUR PASSWORD HERE
-        const MASTER_PASSWORD = "LAXMIANGLIKESTOBANG"; 
+        const MASTER_PASSWORD = "123"; 
 
         function checkPass() {
             if (document.getElementById('passInput').value === MASTER_PASSWORD) {
                 document.getElementById('passwordScreen').style.display = 'none';
                 document.getElementById('mainUI').style.display = 'block';
-            } else {
-                alert("Access Denied.");
+                renderFavs();
+            } else { alert("Access Denied."); }
+        }
+
+        // --- SAVED LINKS LOGIC ---
+        function saveLink() {
+            const url = document.getElementById('urlInput').value;
+            if (!url.startsWith('https://')) return alert("Use https://");
+            let favs = JSON.parse(localStorage.getItem('cloakerFavs') || "[]");
+            if (!favs.includes(url)) {
+                favs.push(url);
+                localStorage.setItem('cloakerFavs', JSON.stringify(favs));
+                renderFavs();
             }
         }
 
+        function deleteFav(index) {
+            let favs = JSON.parse(localStorage.getItem('cloakerFavs') || "[]");
+            favs.splice(index, 1);
+            localStorage.setItem('cloakerFavs', JSON.stringify(favs));
+            renderFavs();
+        }
+
+        function renderFavs() {
+            const list = document.getElementById('favList');
+            const favs = JSON.parse(localStorage.getItem('cloakerFavs') || "[]");
+            list.innerHTML = favs.length ? '' : '<div style="color:#444; padding:5px; font-size:0.8rem;">Empty</div>';
+            favs.forEach((url, i) => {
+                list.innerHTML += `
+                    <div class="fav-item" data-url="${url.toLowerCase()}">
+                        <span class="fav-link" onclick="document.getElementById('urlInput').value='${url}'">${url}</span>
+                        <button class="del-btn" onclick="deleteFav(${i})">×</button>
+                    </div>`;
+            });
+        }
+
+        function filterFavs() {
+            const query = document.getElementById('searchFavs').value.toLowerCase();
+            document.querySelectorAll('.fav-item').forEach(item => {
+                item.classList.toggle('hidden', !item.getAttribute('data-url').includes(query));
+            });
+        }
+
+        // --- LAUNCH LOGIC ---
         function launch() {
             const targetUrl = document.getElementById('urlInput').value;
-            const panicDest = document.getElementById('panicMode').value;
+            const escapeUrl = document.getElementById('customPanic').value || "https://google.com";
             const classroomIcon = "https://ssl.gstatic.com";
             const driveIcon = "https://ssl.gstatic.com";
 
@@ -70,21 +120,14 @@
                 <head>
                     <title>Classes</title>
                     <link id="favicon" rel="icon" type="image/png" href="${classroomIcon}">
-                    <style>
-                        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #000; }
-                        iframe { width: 100%; height: 100%; border: none; }
-                    </style>
+                    <style>body, html { margin:0; padding:0; height:100%; overflow:hidden; background:#000; } iframe { width:100%; height:100%; border:none; }</style>
                 </head>
                 <body tabindex="-1">
-                    <iframe id="cloakFrame" src="${targetUrl}"></iframe>
+                    <iframe src="${targetUrl}"></iframe>
                     <script>
-                        // ANTI-CLOSE
                         window.onbeforeunload = () => "Safety check";
+                        for (let i = 0; i < 15; i++) { history.pushState(null, "", ""); }
 
-                        // HISTORY FLOOD (Better Performance)
-                        for (let i = 0; i < 20; i++) { history.pushState(null, "", ""); }
-
-                        // INSTANT TAB-OUT SWITCH
                         document.addEventListener("visibilitychange", () => {
                             const icon = document.getElementById("favicon");
                             if (document.visibilityState === "hidden") {
@@ -96,16 +139,13 @@
                             }
                         });
 
-                        // PANIC KEY
                         window.addEventListener('keydown', (e) => {
                             if (e.code === 'Backslash') {
                                 window.onbeforeunload = null;
-                                if ("${panicDest}" === "close") { window.close(); }
-                                else { window.location.replace("${panicDest}"); }
+                                window.location.replace("${escapeUrl}");
                             }
                         });
 
-                        // FOCUS LOCK
                         window.addEventListener('blur', () => { setTimeout(() => window.focus(), 100); });
                     <\/script>
                 </body>
@@ -113,10 +153,8 @@
             `;
 
             const blob = new Blob([pageContent], { type: 'text/html' });
-            const blobUrl = URL.createObjectURL(blob);
-            const win = window.open('about:blank', '_blank');
-            if (win) { win.location.href = blobUrl; }
-            else { alert("Popup Blocked!"); }
+            const win = window.open(URL.createObjectURL(blob), '_blank');
+            if (!win) alert("Popup Blocked!");
         }
     </script>
 </body>
