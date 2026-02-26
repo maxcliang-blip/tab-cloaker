@@ -1,70 +1,68 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Universal Cloaker v6</title>
+    <title>Universal Cloaker v8</title>
     <style>
         body { background: #111; color: white; font-family: sans-serif; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; margin: 0; }
         .container { background: #222; padding: 30px; border-radius: 10px; text-align: center; border: 1px solid #444; width: 400px; }
         input { display: block; width: 90%; padding: 12px; margin: 10px auto; border-radius: 5px; border: 1px solid #555; background: #000; color: #0f0; font-family: monospace; }
-        button { padding: 15px 30px; cursor: pointer; background: #4285F4; color: white; border: none; border-radius: 5px; font-weight: bold; width: 100%; }
-        .info { font-size: 0.8rem; color: #888; margin-top: 15px; line-height: 1.4; }
-        b { color: #fff; }
+        button { padding: 15px 30px; cursor: pointer; background: #1a73e8; color: white; border: none; border-radius: 5px; font-weight: bold; width: 100%; }
+        .info { font-size: 0.8rem; color: #888; margin-top: 15px; }
+        b { color: #34a853; } /* Classroom Green */
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h1>Cloaker v6</h1>
-        <p>Disguised as: <b>Google</b></p>
-        
+        <h1>Cloaker v8</h1>
+        <p>Disguised as: <b>Google Classroom</b></p>
         <input type="text" id="urlInput" placeholder="https://www.wikipedia.org" value="https://www.wikipedia.org">
         <button onclick="launch()">Launch Cloak</button>
-        
-        <div class="info">
-            Panic Key: <b> \ </b> (Backslash)<br>
-            Stealth Mode: <b>Active</b> (Becomes "Settings" after 30s idle)
-        </div>
+        <div class="info">Panic Key: <b> \ </b> (Backslash)</div>
     </div>
 
     <script>
         function launch() {
             const targetUrl = document.getElementById('urlInput').value;
-
-            // Updated Disguise: Google
-            const googleIcon = "https://www.google.com";
-            const googleName = "Google";
+            const classroomIcon = "https://ssl.gstatic.com";
+            const classroomName = "Classes";
 
             const pageContent = `
                 <html>
                 <head>
-                    <title>${googleName}</title>
-                    <link rel="icon" type="image/x-icon" href="${googleIcon}">
+                    <title>${classroomName}</title>
+                    <link rel="icon" type="image/png" href="${classroomIcon}">
                     <style>
                         body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #000; }
                         iframe { width: 100%; height: 100%; border: none; }
                     </style>
                 </head>
-                <body>
-                    <iframe src="${targetUrl}"></iframe>
+                <body tabindex="-1">
+                    <iframe id="cloakFrame" src="${targetUrl}"></iframe>
                     
                     <script>
-                        // PANIC KEY
+                        // 1. PANIC KEY LISTENER
                         window.addEventListener('keydown', function(e) {
                             if (e.code === 'Backslash') {
-                                window.location.replace("https://www.google.com");
+                                // Redirects to real Google Classroom
+                                window.location.replace("https://classroom.google.com");
                             }
                         });
 
-                        // STEALTH MODE: Changes title to "Settings" if idle for 30 seconds
+                        // 2. FOCUS FIX: Keeps the panic key active even after clicking the iframe
+                        window.addEventListener('blur', function() {
+                            setTimeout(() => {
+                                window.focus();
+                            }, 100);
+                        });
+
+                        // 3. STEALTH MODE: Changes to "Settings" if idle for 30s
                         let idleTimer;
                         const resetTimer = () => {
-                            document.title = "${googleName}";
+                            document.title = "${classroomName}";
                             clearTimeout(idleTimer);
-                            idleTimer = setTimeout(() => {
-                                document.title = "Settings";
-                            }, 30000); // 30000ms = 30 seconds
+                            idleTimer = setTimeout(() => { document.title = "Settings"; }, 30000);
                         };
-
                         window.addEventListener('mousemove', resetTimer);
                         window.addEventListener('keydown', resetTimer);
                         resetTimer();
