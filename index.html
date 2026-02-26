@@ -1,37 +1,75 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Universal Cloaker v8</title>
+    <title>Google Classroom</title>
+    <link rel="icon" type="image/png" href="https://ssl.gstatic.com">
     <style>
+        /* Hidden by default until password is correct */
+        #mainUI { display: none; }
         body { background: #111; color: white; font-family: sans-serif; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .container { background: #222; padding: 30px; border-radius: 10px; text-align: center; border: 1px solid #444; width: 400px; }
+        .container { background: #222; padding: 30px; border-radius: 10px; text-align: center; border: 1px solid #444; width: 450px; }
         input { display: block; width: 90%; padding: 12px; margin: 10px auto; border-radius: 5px; border: 1px solid #555; background: #000; color: #0f0; font-family: monospace; }
-        button { padding: 15px 30px; cursor: pointer; background: #1a73e8; color: white; border: none; border-radius: 5px; font-weight: bold; width: 100%; }
-        .info { font-size: 0.8rem; color: #888; margin-top: 15px; }
-        b { color: #34a853; } /* Classroom Green */
+        button { padding: 12px 25px; cursor: pointer; background: #1a73e8; color: white; border: none; border-radius: 5px; font-weight: bold; width: 100%; margin-top: 10px; }
+        .info { font-size: 0.8rem; color: #888; margin-top: 15px; text-align: left; }
+        select { background: #333; color: white; padding: 8px; border-radius: 5px; width: 100%; margin-top: 5px; border: 1px solid #555; }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h1>Cloaker v8</h1>
-        <p>Disguised as: <b>Google Classroom</b></p>
-        <input type="text" id="urlInput" placeholder="https://www.wikipedia.org" value="https://www.wikipedia.org">
-        <button onclick="launch()">Launch Cloak</button>
-        <div class="info">Panic Key: <b> \ </b> (Backslash)</div>
+    <!-- 1. PASSWORD SCREEN -->
+    <div id="passwordScreen" class="container">
+        <h1>Classes</h1>
+        <p>Enter Access Key:</p>
+        <input type="password" id="passInput" placeholder="Password...">
+        <button onclick="checkPass()">Unlock</button>
+    </div>
+
+    <!-- 2. MAIN CLOAKER UI -->
+    <div id="mainUI" class="container">
+        <h1>Cloaker v10 (Ultimate)</h1>
+        <input type="text" id="urlInput" value="https://www.wikipedia.org">
+        
+        <label>Panic Key Destination:</label>
+        <select id="panicMode">
+            <option value="https://classroom.google.com">Google Classroom</option>
+            <option value="https://www.google.com">Google Search</option>
+            <option value="close">Instant Close</option>
+        </select>
+
+        <button onclick="launch()">Launch Encrypted Cloak</button>
+        
+        <div class="info">
+            • <b>Master Key</b>: Password protection active.<br>
+            • <b>Anti-Close</b>: Shield enabled in new tab.<br>
+            • <b>Stealth</b>: Instant switch to "My Drive" on tab-out.<br>
+            • <b>Panic</b>: Press <b> \ </b> (Backslash) inside the tab.
+        </div>
     </div>
 
     <script>
+        // SET YOUR PASSWORD HERE
+        const MASTER_PASSWORD = "LAXMIANGLIKESTOBANG"; 
+
+        function checkPass() {
+            if (document.getElementById('passInput').value === MASTER_PASSWORD) {
+                document.getElementById('passwordScreen').style.display = 'none';
+                document.getElementById('mainUI').style.display = 'block';
+            } else {
+                alert("Access Denied.");
+            }
+        }
+
         function launch() {
             const targetUrl = document.getElementById('urlInput').value;
+            const panicDest = document.getElementById('panicMode').value;
             const classroomIcon = "https://ssl.gstatic.com";
-            const classroomName = "Classes";
+            const driveIcon = "https://ssl.gstatic.com";
 
             const pageContent = `
                 <html>
                 <head>
-                    <title>${classroomName}</title>
-                    <link rel="icon" type="image/png" href="${classroomIcon}">
+                    <title>Classes</title>
+                    <link id="favicon" rel="icon" type="image/png" href="${classroomIcon}">
                     <style>
                         body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #000; }
                         iframe { width: 100%; height: 100%; border: none; }
@@ -39,33 +77,36 @@
                 </head>
                 <body tabindex="-1">
                     <iframe id="cloakFrame" src="${targetUrl}"></iframe>
-                    
                     <script>
-                        // 1. PANIC KEY LISTENER
-                        window.addEventListener('keydown', function(e) {
-                            if (e.code === 'Backslash') {
-                                // Redirects to real Google Classroom
-                                window.location.replace("https://classroom.google.com");
+                        // ANTI-CLOSE
+                        window.onbeforeunload = () => "Safety check";
+
+                        // HISTORY FLOOD (Better Performance)
+                        for (let i = 0; i < 20; i++) { history.pushState(null, "", ""); }
+
+                        // INSTANT TAB-OUT SWITCH
+                        document.addEventListener("visibilitychange", () => {
+                            const icon = document.getElementById("favicon");
+                            if (document.visibilityState === "hidden") {
+                                document.title = "My Drive - Google Drive";
+                                icon.href = "${driveIcon}";
+                            } else {
+                                document.title = "Classes";
+                                icon.href = "${classroomIcon}";
                             }
                         });
 
-                        // 2. FOCUS FIX: Keeps the panic key active even after clicking the iframe
-                        window.addEventListener('blur', function() {
-                            setTimeout(() => {
-                                window.focus();
-                            }, 100);
+                        // PANIC KEY
+                        window.addEventListener('keydown', (e) => {
+                            if (e.code === 'Backslash') {
+                                window.onbeforeunload = null;
+                                if ("${panicDest}" === "close") { window.close(); }
+                                else { window.location.replace("${panicDest}"); }
+                            }
                         });
 
-                        // 3. STEALTH MODE: Changes to "Settings" if idle for 30s
-                        let idleTimer;
-                        const resetTimer = () => {
-                            document.title = "${classroomName}";
-                            clearTimeout(idleTimer);
-                            idleTimer = setTimeout(() => { document.title = "Settings"; }, 30000);
-                        };
-                        window.addEventListener('mousemove', resetTimer);
-                        window.addEventListener('keydown', resetTimer);
-                        resetTimer();
+                        // FOCUS LOCK
+                        window.addEventListener('blur', () => { setTimeout(() => window.focus(), 100); });
                     <\/script>
                 </body>
                 </html>
@@ -74,12 +115,8 @@
             const blob = new Blob([pageContent], { type: 'text/html' });
             const blobUrl = URL.createObjectURL(blob);
             const win = window.open('about:blank', '_blank');
-
-            if (win) {
-                win.location.href = blobUrl;
-            } else {
-                alert("Popup blocked! Check the top right of your address bar.");
-            }
+            if (win) { win.location.href = blobUrl; }
+            else { alert("Popup Blocked!"); }
         }
     </script>
 </body>
