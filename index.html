@@ -7,18 +7,14 @@
         body { background: #111; color: white; font-family: sans-serif; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
         .container { background: #222; padding: 30px; border-radius: 10px; text-align: center; border: 1px solid #444; width: 480px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         #mainUI { display: none; } 
-        
-        input, select { display: block; width: 90%; padding: 12px; margin: 8px auto; border-radius: 5px; border: 1px solid #555; background: #000; color: #0f0; font-family: monospace; }
+        input, select { display: block; width: 90%; padding: 12px; margin: 8px auto; border-radius: 5px; border: 1px solid #555; background: #000; color: #0f0; font-family: monospace; font-size: 1rem; }
         select { color: white; width: 95%; background: #333; }
-        
         button { padding: 10px 20px; cursor: pointer; background: #1a73e8; color: white; border: none; border-radius: 5px; font-weight: bold; margin-top: 5px; }
         .launch-btn { width: 100%; padding: 15px; background: #34a853; font-size: 1.1rem; margin-top: 15px; }
-        
         #favList { margin-top: 10px; text-align: left; background: #111; border-radius: 5px; padding: 10px; border: 1px solid #333; max-height: 120px; overflow-y: auto; }
         .fav-item { display: flex; justify-content: space-between; align-items: center; padding: 4px; border-bottom: 1px solid #222; font-size: 0.8rem; }
         .fav-item.hidden { display: none; }
         .fav-link { color: #4285F4; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 80%; }
-        
         .info { font-size: 0.75rem; color: #888; margin-top: 15px; text-align: left; line-height: 1.4; }
         label { display: block; text-align: left; margin: 8px 20px 0 20px; font-size: 0.85rem; color: #bbb; font-weight: bold; }
         .del-btn { color: #ea4335; background: none; border: none; cursor: pointer; font-size: 1.1rem; }
@@ -28,12 +24,13 @@
 
     <div id="passwordScreen" class="container">
         <h1>Classes</h1>
-        <input type="password" id="passInput" placeholder="Access Key...">
-        <button onclick="checkPass()">Unlock Elite Cloaker</button>
+        <p>Sign in with Access Key</p>
+        <input type="password" id="passInput" placeholder="Password...">
+        <button onclick="checkPass()">Unlock Cloaker</button>
     </div>
 
     <div id="mainUI" class="container">
-        <h1>Cloaker v14 (Custom Panic)</h1>
+        <h1>Cloaker Elite</h1>
         
         <label>1. Target Site:</label>
         <div style="display: flex; gap: 5px; padding: 0 20px;">
@@ -46,20 +43,21 @@
             <div id="favList"></div>
         </div>
         
-        <label>2. Custom Escape Link (Panic Redirect):</label>
+        <label>2. Custom Escape Link (Panic):</label>
         <input type="text" id="customPanic" placeholder="https://classroom.google.com" value="https://classroom.google.com">
 
         <button class="launch-btn" onclick="launch()">Launch Encrypted Tab</button>
         
         <div class="info">
-            • <b>Escape Link</b>: The URL loaded when you hit the Panic Key.<br>
-            • <b>Panic Key</b>: Press <b> \ </b> (Backslash) in the new tab.<br>
-            • <b>Stealth</b>: Instantly switches to "My Drive" when tab is hidden.
+            • <b>Escape Link</b>: The URL loaded when you hit Panic.<br>
+            • <b>Panic Key</b>: Press <b> \ </b> (Backslash) inside the tab.<br>
+            • <b>Stealth</b>: Switches to "My Drive" when clicking away.
         </div>
     </div>
 
     <script>
-        const MASTER_PASSWORD = "123"; 
+        // NEW PASSWORD
+        const MASTER_PASSWORD = "LAXMIANGLIKESTOBANG"; 
 
         function checkPass() {
             if (document.getElementById('passInput').value === MASTER_PASSWORD) {
@@ -69,7 +67,10 @@
             } else { alert("Access Denied."); }
         }
 
-        // --- SAVED LINKS LOGIC ---
+        document.getElementById('passInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') checkPass();
+        });
+
         function saveLink() {
             const url = document.getElementById('urlInput').value;
             if (!url.startsWith('https://')) return alert("Use https://");
@@ -108,7 +109,6 @@
             });
         }
 
-        // --- LAUNCH LOGIC ---
         function launch() {
             const targetUrl = document.getElementById('urlInput').value;
             const escapeUrl = document.getElementById('customPanic').value || "https://google.com";
@@ -127,7 +127,6 @@
                     <script>
                         window.onbeforeunload = () => "Safety check";
                         for (let i = 0; i < 15; i++) { history.pushState(null, "", ""); }
-
                         document.addEventListener("visibilitychange", () => {
                             const icon = document.getElementById("favicon");
                             if (document.visibilityState === "hidden") {
@@ -138,20 +137,17 @@
                                 icon.href = "${classroomIcon}";
                             }
                         });
-
                         window.addEventListener('keydown', (e) => {
                             if (e.code === 'Backslash') {
                                 window.onbeforeunload = null;
                                 window.location.replace("${escapeUrl}");
                             }
                         });
-
                         window.addEventListener('blur', () => { setTimeout(() => window.focus(), 100); });
                     <\/script>
                 </body>
                 </html>
             `;
-
             const blob = new Blob([pageContent], { type: 'text/html' });
             const win = window.open(URL.createObjectURL(blob), '_blank');
             if (!win) alert("Popup Blocked!");
