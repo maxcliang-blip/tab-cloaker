@@ -1,43 +1,44 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Universal Site Cloaker</title>
+    <title>Universal Cloaker v6</title>
     <style>
-        body { background: #121212; color: white; font-family: sans-serif; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .container { background: #1e1e1e; padding: 40px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-align: center; }
-        input { padding: 12px; width: 300px; border-radius: 5px; border: 1px solid #333; background: #2a2a2a; color: white; margin-bottom: 20px; outline: none; }
-        button { padding: 12px 25px; font-weight: bold; cursor: pointer; border: none; border-radius: 5px; background: #007bff; color: white; transition: 0.2s; }
-        button:hover { background: #0056b3; transform: scale(1.05); }
+        body { background: #111; color: white; font-family: sans-serif; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .container { background: #222; padding: 30px; border-radius: 10px; text-align: center; border: 1px solid #444; width: 400px; }
+        input { display: block; width: 90%; padding: 12px; margin: 10px auto; border-radius: 5px; border: 1px solid #555; background: #000; color: #0f0; font-family: monospace; }
+        button { padding: 15px 30px; cursor: pointer; background: #4285F4; color: white; border: none; border-radius: 5px; font-weight: bold; width: 100%; }
+        .info { font-size: 0.8rem; color: #888; margin-top: 15px; line-height: 1.4; }
+        b { color: #fff; }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h1>Site Cloaker</h1>
-        <p>Enter the <b>https://</b> link you want to embed:</p>
-        <input type="text" id="urlInput" placeholder="https://www.wikipedia.org">
-        <br>
-        <button onclick="launchCloak()">Launch in about:blank</button>
+        <h1>Cloaker v6</h1>
+        <p>Disguised as: <b>Google</b></p>
+        
+        <input type="text" id="urlInput" placeholder="https://www.wikipedia.org" value="https://www.wikipedia.org">
+        <button onclick="launch()">Launch Cloak</button>
+        
+        <div class="info">
+            Panic Key: <b> \ </b> (Backslash)<br>
+            Stealth Mode: <b>Active</b> (Becomes "Settings" after 30s idle)
+        </div>
     </div>
 
     <script>
-        function launchCloak() {
+        function launch() {
             const targetUrl = document.getElementById('urlInput').value;
 
-            // Basic check for https
-            if (!targetUrl.startsWith('https://')) {
-                alert("Error: Link must start with https:// for security.");
-                return;
-            }
+            // Updated Disguise: Google
+            const googleIcon = "https://www.google.com";
+            const googleName = "Google";
 
-            // 1. Create the HTML for the cloaked page
-            const pageHTML = `
-                <!DOCTYPE html>
+            const pageContent = `
                 <html>
                 <head>
-                    <title>Google Docs</title>
-                    <link rel="icon" type="image/x-icon" href="https://ssl.gstatic.com">
+                    <title>${googleName}</title>
+                    <link rel="icon" type="image/x-icon" href="${googleIcon}">
                     <style>
                         body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #000; }
                         iframe { width: 100%; height: 100%; border: none; }
@@ -45,25 +46,43 @@
                 </head>
                 <body>
                     <iframe src="${targetUrl}"></iframe>
+                    
+                    <script>
+                        // PANIC KEY
+                        window.addEventListener('keydown', function(e) {
+                            if (e.code === 'Backslash') {
+                                window.location.replace("https://www.google.com");
+                            }
+                        });
+
+                        // STEALTH MODE: Changes title to "Settings" if idle for 30 seconds
+                        let idleTimer;
+                        const resetTimer = () => {
+                            document.title = "${googleName}";
+                            clearTimeout(idleTimer);
+                            idleTimer = setTimeout(() => {
+                                document.title = "Settings";
+                            }, 30000); // 30000ms = 30 seconds
+                        };
+
+                        window.addEventListener('mousemove', resetTimer);
+                        window.addEventListener('keydown', resetTimer);
+                        resetTimer();
+                    <\/script>
                 </body>
                 </html>
             `;
 
-            // 2. Create a Blob (virtual file) to bypass GitHub 404s
-            const blob = new Blob([pageHTML], { type: 'text/html' });
+            const blob = new Blob([pageContent], { type: 'text/html' });
             const blobUrl = URL.createObjectURL(blob);
-
-            // 3. Open the virtual file
             const win = window.open('about:blank', '_blank');
 
             if (win) {
-                // 4. Overwrite the about:blank with our blob content
                 win.location.href = blobUrl;
             } else {
-                alert("Popup Blocked! Please click the icon in your address bar and 'Allow Popups'.");
+                alert("Popup blocked! Check the top right of your address bar.");
             }
         }
     </script>
-
 </body>
 </html>
