@@ -1,0 +1,51 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Advanced Cloaker</title>
+    <style>
+        body { background: #111; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        button { padding: 15px 30px; font-size: 1.2rem; cursor: pointer; background: #28a745; color: white; border: none; border-radius: 5px; }
+    </style>
+</head>
+<body>
+
+    <button onclick="launch()">Launch Cloaked Site</button>
+
+    <script>
+        function launch() {
+            const targetUrl = "boltunblocker.com"; // Change this to your site
+
+            // 1. Define the HTML content for the new window
+            const htmlContent = `
+                <html>
+                <head>
+                    <title>Google Docs</title>
+                    <style>
+                        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; }
+                        iframe { width: 100%; height: 100%; border: none; }
+                    </style>
+                </head>
+                <body>
+                    <iframe src="${targetUrl}"></iframe>
+                </body>
+                </html>
+            `;
+
+            // 2. Open a window with about:blank
+            const win = window.open('about:blank', '_blank');
+
+            // 3. Directly overwrite the entire window content
+            // This method bypasses the "Moved/Deleted" error by replacing the document
+            if (win) {
+                win.document.open();
+                win.document.write(htmlContent);
+                win.document.close();
+            } else {
+                alert("Popup blocked! Click the icon in the URL bar to allow popups.");
+            }
+        }
+    </script>
+
+</body>
+</html>
