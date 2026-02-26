@@ -1,27 +1,43 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Cloaker v3</title>
+    <meta charset="UTF-8">
+    <title>Universal Site Cloaker</title>
     <style>
-        body { background: #111; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .btn { padding: 15px 30px; font-size: 1.2rem; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 5px; }
+        body { background: #121212; color: white; font-family: sans-serif; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .container { background: #1e1e1e; padding: 40px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-align: center; }
+        input { padding: 12px; width: 300px; border-radius: 5px; border: 1px solid #333; background: #2a2a2a; color: white; margin-bottom: 20px; outline: none; }
+        button { padding: 12px 25px; font-weight: bold; cursor: pointer; border: none; border-radius: 5px; background: #007bff; color: white; transition: 0.2s; }
+        button:hover { background: #0056b3; transform: scale(1.05); }
     </style>
 </head>
 <body>
 
-    <button class="btn" onclick="launch()">Launch Cloaked Site</button>
+    <div class="container">
+        <h1>Site Cloaker</h1>
+        <p>Enter the <b>https://</b> link you want to embed:</p>
+        <input type="text" id="urlInput" placeholder="https://www.wikipedia.org">
+        <br>
+        <button onclick="launchCloak()">Launch in about:blank</button>
+    </div>
 
     <script>
-        function launch() {
-            // 1. Change this to the site you want to cloak
-            const targetUrl = "https://www.wikipedia.org"; 
+        function launchCloak() {
+            const targetUrl = document.getElementById('urlInput').value;
 
-            // 2. Create the HTML for the new page
-            const pageContent = `
+            // Basic check for https
+            if (!targetUrl.startsWith('https://')) {
+                alert("Error: Link must start with https:// for security.");
+                return;
+            }
+
+            // 1. Create the HTML for the cloaked page
+            const pageHTML = `
                 <!DOCTYPE html>
                 <html>
                 <head>
                     <title>Google Docs</title>
+                    <link rel="icon" type="image/x-icon" href="https://ssl.gstatic.com">
                     <style>
                         body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #000; }
                         iframe { width: 100%; height: 100%; border: none; }
@@ -33,20 +49,21 @@
                 </html>
             `;
 
-            // 3. Create a 'Blob' (a virtual file in browser memory)
-            const blob = new Blob([pageContent], { type: 'text/html' });
+            // 2. Create a Blob (virtual file) to bypass GitHub 404s
+            const blob = new Blob([pageHTML], { type: 'text/html' });
             const blobUrl = URL.createObjectURL(blob);
 
-            // 4. Open the virtual file in a new tab
-            const win = window.open(blobUrl, '_blank');
+            // 3. Open the virtual file
+            const win = window.open('about:blank', '_blank');
 
-            // 5. Clean up memory once opened
             if (win) {
-                URL.revokeObjectURL(blobUrl);
+                // 4. Overwrite the about:blank with our blob content
+                win.location.href = blobUrl;
             } else {
-                alert("Popup blocked! Please allow popups in your address bar.");
+                alert("Popup Blocked! Please click the icon in your address bar and 'Allow Popups'.");
             }
         }
     </script>
+
 </body>
 </html>
