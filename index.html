@@ -1,45 +1,84 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html>
 <head>
     <title>404 Not Found</title>
     <link rel="icon" type="image/png" href="https://ssl.gstatic.com">
     <style>
-        body { margin: 0; font-family: sans-serif; background: #fff; height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-        #shadow { text-align: center; color: #333; }
+        body { margin: 0; font-family: sans-serif; }
+        #shadow { text-align: center; padding-top: 100px; background: white; height: 100vh; color: #333; }
         #error404 { font-size: 50px; cursor: default; user-select: none; }
         .trigger { cursor: pointer; color: inherit; }
         
-        #mainUI { display: none; background: #111; color: white; min-height: 100vh; width: 100%; flex-direction: column; justify-content: center; align-items: center; }
-        .container { background: #222; padding: 30px; border-radius: 10px; text-align: center; border: 1px solid #444; width: 480px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); transition: opacity 0.3s; }
-        input { display: block; width: 90%; padding: 12px; margin: 10px auto; border-radius: 5px; border: 1px solid #555; background: #000; color: #0f0; font-family: monospace; }
+        #mainUI { display: none; background: #111; color: white; min-height: 100vh; flex-direction: column; justify-content: center; align-items: center; }
+        .container { background: #222; padding: 25px; border-radius: 10px; text-align: center; border: 1px solid #444; width: 500px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
+        input { display: block; width: 90%; padding: 12px; margin: 10px auto; border-radius: 5px; border: 1px solid #555; background: #000; color: #0f0; font-family: monospace; font-size: 1rem; }
         button { padding: 12px 25px; cursor: pointer; background: #1a73e8; color: white; border: none; border-radius: 5px; font-weight: bold; width: 100%; margin-top: 10px; }
         .launch-btn { background: #34a853; font-size: 1.1rem; }
+        
+        /* PREVIEW BOX STYLES */
+        #previewBox { width: 90%; height: 150px; margin: 15px auto; background: #000; border: 2px dashed #444; border-radius: 5px; overflow: hidden; position: relative; }
+        #previewFrame { width: 100%; height: 100%; border: none; transform: scale(0.5); transform-origin: 0 0; width: 200%; height: 200%; }
+        .preview-label { font-size: 0.75rem; color: #888; margin-top: -10px; display: block; }
     </style>
 </head>
 <body>
 
+    <!-- FAKE 404 SCREEN -->
     <div id="shadow">
         <h1 id="error404">Error <span class="trigger" onclick="unlock()">4</span>04</h1>
         <p>The requested URL was not found on this server.</p>
+        <hr style="width:50%; border:0; border-top:1px solid #eee;">
     </div>
 
+    <!-- MAIN DASHBOARD -->
     <div id="mainUI">
         <div class="container">
-            <h1>Elite Cloaker v28</h1>
+            <h1>Elite Cloaker v26</h1>
             <input type="password" id="pswd" placeholder="Access Key...">
+            
             <div id="controls" style="display:none;">
-                <input type="text" id="target" value="https://www.wikipedia.org">
+                <label style="display:block;text-align:left;margin-left:20px;font-size:0.8rem;color:#888;">Target Site:</label>
+                <input type="text" id="target" value="https://www.wikipedia.org" oninput="updatePreview()">
+                
+                <div id="previewBox">
+                    <iframe id="previewFrame" src="https://www.wikipedia.org"></iframe>
+                </div>
+                <span class="preview-label">Live Preview (Scale: 50%)</span>
+
+                <label style="display:block;text-align:left;margin-left:20px;margin-top:10px;font-size:0.8rem;color:#888;">Panic Escape Link:</label>
                 <input type="text" id="panic" value="https://classroom.google.com">
-                <button class="launch-btn" onclick="launch()">Launch Elite Tab</button>
+                
+                <button class="launch-btn" onclick="launch()">Launch Stealth Tab</button>
             </div>
-            <button id="unlckBtn" onclick="verify()">Unlock</button>
+            
+            <button id="unlckBtn" onclick="verify()">Unlock Dashboard</button>
         </div>
     </div>
 
     <script>
         const PASS = "123";
-        function unlock() { document.getElementById('shadow').style.display='none'; document.getElementById('mainUI').style.display='flex'; document.title="Classes"; }
-        function verify() { if(document.getElementById('pswd').value === PASS) { document.getElementById('controls').style.display='block'; document.getElementById('unlckBtn').style.display='none'; document.getElementById('pswd').style.display='none'; } }
+
+        function unlock() { 
+            document.getElementById('shadow').style.display='none'; 
+            document.getElementById('mainUI').style.display='flex'; 
+            document.title="Classes"; 
+        }
+
+        function verify() { 
+            if(document.getElementById('pswd').value === PASS) { 
+                document.getElementById('controls').style.display='block'; 
+                document.getElementById('unlckBtn').style.display='none'; 
+                document.getElementById('pswd').style.display='none'; 
+            }
+        }
+
+        function updatePreview() {
+            const url = document.getElementById('target').value;
+            // Update the preview frame instantly
+            if(url.startsWith('https://')) {
+                document.getElementById('previewFrame').src = url;
+            }
+        }
 
         function launch() {
             const url = document.getElementById('target').value;
@@ -55,29 +94,21 @@
                 <body tabindex="-1">
                     <iframe src="${url}"></iframe>
                     <script>
-                        // 1. DEEP HISTORY SCRUB
-                        setInterval(() => { history.replaceState(null, "Classes", "/h"); }, 100);
-
-                        // 2. USER-AGENT SPOOFING (Basic)
-                        Object.defineProperty(navigator, 'userAgent', { get: () => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36' });
-
-                        // 3. PANIC KEY & DEVTOOLS DETECTION
-                        const panic = () => { window.onbeforeunload = null; window.location.replace("${esc}"); };
-                        window.addEventListener('keydown', (e) => { if (e.code === 'Backslash') panic(); });
-                        
-                        // Detect DevTools by checking window size difference
-                        setInterval(() => {
-                            if (window.outerWidth - window.innerWidth > 160 || window.outerHeight - window.innerHeight > 160) panic();
-                        }, 1000);
-
-                        setInterval(() => { window.focus(); }, 500);
+                        for(let i=0; i<15; i++){ history.pushState(null, "", "Classes"); }
+                        window.onbeforeunload = () => "Safety Check";
+                        window.addEventListener('keydown', (e) => {
+                            if (e.code === 'Backslash') { window.onbeforeunload = null; window.location.replace("${esc}"); }
+                        });
+                        setInterval(() => { if (document.activeElement.tagName === 'IFRAME') { window.focus(); } }, 500);
                     <\/script>
                 </body>
                 </html>
             `;
+
             const blob = new Blob([pageHTML], { type: 'text/html' });
             const win = window.open('about:blank', '_blank');
-            if (win) win.location.href = URL.createObjectURL(blob);
+            if (win) { win.location.href = URL.createObjectURL(blob); }
+            else { alert("Popup Blocked!"); }
         }
     </script>
 </body>
