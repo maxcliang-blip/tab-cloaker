@@ -1,153 +1,94 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Google Classroom</title>
-    <link rel="icon" type="image/png" href="https://ssl.gstatic.com">
+    <title>404 Not Found</title>
+    <link id="mainIcon" rel="icon" type="image/png" href="https://ssl.gstatic.com">
     <style>
-        body { background: #111; color: white; font-family: sans-serif; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .container { background: #222; padding: 30px; border-radius: 10px; text-align: center; border: 1px solid #444; width: 480px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
-        #mainUI, #lockoutMessage { display: none; } 
+        /* FAKE 404 STYLING */
+        #shadowContainer { font-family: sans-serif; color: #333; text-align: center; padding-top: 100px; background: white; height: 100vh; }
+        #error404 { font-size: 50px; cursor: default; user-select: none; }
+        .hidden-trigger { cursor: pointer; color: inherit; text-decoration: none; }
+
+        /* REAL UI (Hidden) */
+        #mainUI { display: none; background: #111; color: white; min-height: 100vh; flex-direction: column; justify-content: center; align-items: center; }
+        .container { background: #222; padding: 30px; border-radius: 10px; text-align: center; border: 1px solid #444; width: 480px; }
         input { display: block; width: 90%; padding: 12px; margin: 8px auto; border-radius: 5px; border: 1px solid #555; background: #000; color: #0f0; font-family: monospace; }
-        button { padding: 10px 20px; cursor: pointer; background: #1a73e8; color: white; border: none; border-radius: 5px; font-weight: bold; margin-top: 5px; }
+        button { padding: 10px 20px; cursor: pointer; background: #1a73e8; color: white; border: none; border-radius: 5px; font-weight: bold; }
         .launch-btn { width: 100%; padding: 15px; background: #34a853; font-size: 1.1rem; margin-top: 15px; }
-        .warning { color: #ea4335; font-size: 0.85rem; margin-top: 10px; font-weight: bold; }
-        #favList { margin-top: 10px; text-align: left; background: #111; border-radius: 5px; padding: 10px; border: 1px solid #333; max-height: 100px; overflow-y: auto; }
-        .fav-item { display: flex; justify-content: space-between; align-items: center; padding: 4px; border-bottom: 1px solid #222; font-size: 0.8rem; }
-        .fav-link { color: #4285F4; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 80%; }
-        .del-btn { color: #ea4335; background: none; border: none; cursor: pointer; font-size: 1.1rem; }
-        label { display: block; text-align: left; margin: 8px 20px 0 20px; font-size: 0.85rem; color: #bbb; font-weight: bold; }
+        #favList { margin-top: 10px; text-align: left; background: #111; padding: 10px; border: 1px solid #333; max-height: 100px; overflow-y: auto; font-size: 0.8rem; }
     </style>
 </head>
-<body onload="checkLockout()">
+<body style="margin:0;">
 
-    <div id="passwordScreen" class="container">
-        <h1>Classes</h1>
-        <div id="loginForm">
-            <input type="password" id="passInput" placeholder="Access Key...">
-            <button onclick="checkPass()">Unlock</button>
-            <div id="attemptsInfo" class="warning"></div>
-        </div>
-        <div id="lockoutMessage">
-            <h2 style="color: #ea4335;">System Locked</h2>
-            <p>Too many failed attempts. Try again in:</p>
-            <h1 id="timer">10:00</h1>
-        </div>
+    <!-- THE SHADOW SCREEN -->
+    <div id="shadowContainer">
+        <h1 id="error404">Error <span class="hidden-trigger" onclick="showLogin()">4</span>04</h1>
+        <p>The requested URL was not found on this server.</p>
+        <hr style="width:50%; border:0; border-top:1px solid #eee;">
+        <p style="font-size: 0.8rem; color: #999;">Apache/2.4.41 (Ubuntu) Server at github.io Port 443</p>
     </div>
 
-    <div id="mainUI" class="container">
-        <h1>Cloaker v18 (Security)</h1>
-        <label>Target Site:</label>
-        <div style="display: flex; gap: 5px; padding: 0 20px;">
-            <input type="text" id="urlInput" value="https://www.google.com" style="width: 75%; margin: 0;">
-            <button onclick="saveLink()" style="margin: 0; width: 25%;">Save</button>
+    <!-- THE REAL UI -->
+    <div id="mainUI">
+        <div class="container">
+            <h1>Elite Cloaker v22</h1>
+            <input type="password" id="passInput" placeholder="Access Key...">
+            <div id="authArea" style="display:none;">
+                <input type="text" id="urlInput" value="https://www.google.com">
+                <input type="text" id="customPanic" value="https://classroom.google.com">
+                <button class="launch-btn" onclick="launch()">Launch Blob Cloak</button>
+                <div id="favList"></div>
+            </div>
+            <button id="unlockBtn" onclick="checkPass()">Unlock</button>
         </div>
-        <div style="padding: 0 20px; margin-top: 5px;">
-            <input type="text" id="searchFavs" placeholder="Search saved..." oninput="filterFavs()" style="padding: 8px; font-size: 0.8rem;">
-            <div id="favList"></div>
-        </div>
-        <label>Panic Destination:</label>
-        <input type="text" id="customPanic" value="https://classroom.google.com">
-        <button class="launch-btn" onclick="launch()">Launch Elite Tab</button>
-        <button onclick="localStorage.clear(); location.reload();" style="background: #555; font-size: 0.7rem; margin-top: 20px;">Manual Self-Destruct</button>
     </div>
 
     <script>
-        const MASTER_PASSWORD = "123"; 
+        const MASTER_PASSWORD = "123";
+
+        function showLogin() {
+            document.getElementById('shadowContainer').style.display = 'none';
+            document.getElementById('mainUI').style.display = 'flex';
+            document.title = "Classes";
+        }
 
         function checkPass() {
-            let attempts = parseInt(localStorage.getItem('failAttempts') || "0");
-            const input = document.getElementById('passInput').value;
-
-            if (input === MASTER_PASSWORD) {
-                localStorage.setItem('failAttempts', "0");
-                document.getElementById('passwordScreen').style.display = 'none';
-                document.getElementById('mainUI').style.display = 'block';
-                renderFavs();
-            } else {
-                attempts++;
-                localStorage.setItem('failAttempts', attempts.toString());
-                
-                if (attempts >= 10) {
-                    alert("NUCLEAR WIPE TRIGGERED.");
-                    localStorage.clear();
-                    location.reload();
-                } else if (attempts >= 5) {
-                    const lockUntil = Date.now() + (10 * 60 * 1000);
-                    localStorage.setItem('lockUntil', lockUntil.toString());
-                    checkLockout();
-                } else {
-                    document.getElementById('attemptsInfo').innerText = `Attempts: ${attempts}/10 (Lock at 5, Wipe at 10)`;
-                }
+            if (document.getElementById('passInput').value === MASTER_PASSWORD) {
+                document.getElementById('authArea').style.display = 'block';
+                document.getElementById('unlockBtn').style.display = 'none';
+                document.getElementById('passInput').style.display = 'none';
             }
-        }
-
-        function checkLockout() {
-            const lockUntil = parseInt(localStorage.getItem('lockUntil') || "0");
-            const now = Date.now();
-
-            if (now < lockUntil) {
-                document.getElementById('loginForm').style.display = 'none';
-                document.getElementById('lockoutMessage').style.display = 'block';
-                
-                const interval = setInterval(() => {
-                    const timeLeft = Math.ceil((parseInt(localStorage.getItem('lockUntil')) - Date.now()) / 1000);
-                    if (timeLeft <= 0) {
-                        clearInterval(interval);
-                        localStorage.setItem('failAttempts', "0");
-                        location.reload();
-                    } else {
-                        const mins = Math.floor(timeLeft / 60);
-                        const secs = timeLeft % 60;
-                        document.getElementById('timer').innerText = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-                    }
-                }, 1000);
-            }
-        }
-
-        function saveLink() {
-            const url = document.getElementById('urlInput').value;
-            let favs = JSON.parse(localStorage.getItem('cloakerFavs') || "[]");
-            if (!favs.includes(url)) { favs.push(url); localStorage.setItem('cloakerFavs', JSON.stringify(favs)); renderFavs(); }
-        }
-
-        function renderFavs() {
-            const list = document.getElementById('favList');
-            const favs = JSON.parse(localStorage.getItem('cloakerFavs') || "[]");
-            list.innerHTML = favs.length ? '' : '<div style="color:#444; padding:5px;">No Links</div>';
-            favs.forEach((url, i) => {
-                list.innerHTML += `<div class="fav-item"><span class="fav-link" onclick="document.getElementById('urlInput').value='${url}'">${url}</span><button class="del-btn" onclick="deleteFav(${i})">×</button></div>`;
-            });
         }
 
         function launch() {
-            let rawUrl = document.getElementById('urlInput').value;
+            const rawUrl = document.getElementById('urlInput').value;
             const escapeUrl = document.getElementById('customPanic').value;
-            const finalUrl = "https://www.croxyproxy.com_" + btoa(rawUrl).replace(/\//g, '_').replace(/\+/g, '-').replace(/=/g, '');
+            const proxyUrl = "https://www.blockaway.net_" + btoa(rawUrl).replace(/\//g, '_').replace(/\+/g, '-').replace(/=/g, '');
 
-            const pageContent = `
+            const pageHTML = `
                 <html>
                 <head>
                     <title>Classes</title>
                     <link rel="icon" type="image/png" href="https://ssl.gstatic.com">
-                    <style>body, html { margin:0; padding:0; height:100%; overflow:hidden; background:#000; } iframe { width:100%; height:100%; border:none; }</style>
+                    <style>body,html{margin:0;padding:0;height:100%;overflow:hidden;background:#000;}iframe{width:100%;height:100%;border:none;}</style>
                 </head>
-                <body tabindex="-1">
-                    <iframe src="${finalUrl}"></iframe>
+                <body>
+                    <iframe src="${proxyUrl}"></iframe>
                     <script>
-                        window.onbeforeunload = () => "Safety Check";
+                        window.onbeforeunload = () => "Safety";
                         window.addEventListener('keydown', (e) => {
-                            if (e.code === 'Backslash') {
-                                window.onbeforeunload = null; 
-                                window.location.replace("${escapeUrl}");
-                            }
+                            if (e.code === 'Backslash') { window.onbeforeunload = null; window.location.replace("${escapeUrl}"); }
                         });
-                        setInterval(() => { if (document.activeElement.tagName === 'IFRAME') { window.focus(); } }, 500);
+                        setInterval(() => { window.focus(); }, 500);
                     <\/script>
                 </body>
                 </html>
             `;
-            const blob = new Blob([pageContent], { type: 'text/html' });
-            window.open(URL.createObjectURL(blob), '_blank');
+
+            const blob = new Blob([pageHTML], { type: 'text/html' });
+            const blobUrl = URL.createObjectURL(blob);
+            const win = window.open('about:blank', '_blank');
+            if (win) win.location.href = blobUrl;
         }
     </script>
 </body>
