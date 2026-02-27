@@ -2,69 +2,108 @@
 <html>
 <head>
     <title>404 Not Found</title>
-    <link id="mainIcon" rel="icon" type="image/png" href="https://ssl.gstatic.com">
+    <link rel="icon" type="image/png" href="https://ssl.gstatic.com">
     <style>
-        /* FAKE 404 STYLING */
-        #shadowContainer { font-family: sans-serif; color: #333; text-align: center; padding-top: 100px; background: white; height: 100vh; }
+        body { margin: 0; font-family: sans-serif; overflow-x: hidden; }
+        #shadow { text-align: center; padding-top: 100px; background: white; height: 100vh; color: #333; }
         #error404 { font-size: 50px; cursor: default; user-select: none; }
-        .hidden-trigger { cursor: pointer; color: inherit; text-decoration: none; }
-
-        /* REAL UI (Hidden) */
+        .trigger { cursor: pointer; color: inherit; }
+        
         #mainUI { display: none; background: #111; color: white; min-height: 100vh; flex-direction: column; justify-content: center; align-items: center; }
-        .container { background: #222; padding: 30px; border-radius: 10px; text-align: center; border: 1px solid #444; width: 480px; }
-        input { display: block; width: 90%; padding: 12px; margin: 8px auto; border-radius: 5px; border: 1px solid #555; background: #000; color: #0f0; font-family: monospace; }
-        button { padding: 10px 20px; cursor: pointer; background: #1a73e8; color: white; border: none; border-radius: 5px; font-weight: bold; }
-        .launch-btn { width: 100%; padding: 15px; background: #34a853; font-size: 1.1rem; margin-top: 15px; }
-        #favList { margin-top: 10px; text-align: left; background: #111; padding: 10px; border: 1px solid #333; max-height: 100px; overflow-y: auto; font-size: 0.8rem; }
+        
+        /* GHOST STEALTH CONTAINER */
+        .container { 
+            background: #222; padding: 25px; border-radius: 10px; text-align: center; 
+            border: 1px solid #444; width: 500px; box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            transition: opacity 0.3s ease;
+        }
+        
+        /* Apply this class via the checkbox */
+        .ghost-mode { opacity: 0; }
+        .ghost-mode:hover { opacity: 1; }
+
+        input { display: block; width: 90%; padding: 12px; margin: 10px auto; border-radius: 5px; border: 1px solid #555; background: #000; color: #0f0; font-family: monospace; font-size: 1rem; }
+        button { padding: 12px 25px; cursor: pointer; background: #1a73e8; color: white; border: none; border-radius: 5px; font-weight: bold; width: 100%; margin-top: 10px; }
+        .launch-btn { background: #34a853; font-size: 1.1rem; }
+        
+        #previewBox { width: 90%; height: 150px; margin: 15px auto; background: #000; border: 2px dashed #444; border-radius: 5px; overflow: hidden; position: relative; }
+        #previewFrame { width: 100%; height: 100%; border: none; transform: scale(0.5); transform-origin: 0 0; width: 200%; height: 200%; }
+        
+        .stealth-option { margin-top: 15px; font-size: 0.8rem; color: #aaa; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .stealth-option input { width: auto; margin: 0; }
     </style>
 </head>
-<body style="margin:0;">
+<body>
 
-    <!-- THE SHADOW SCREEN -->
-    <div id="shadowContainer">
-        <h1 id="error404">Error <span class="hidden-trigger" onclick="showLogin()">4</span>04</h1>
+    <!-- FAKE 404 SCREEN -->
+    <div id="shadow">
+        <h1 id="error404">Error <span class="trigger" onclick="unlock()">4</span>04</h1>
         <p>The requested URL was not found on this server.</p>
         <hr style="width:50%; border:0; border-top:1px solid #eee;">
-        <p style="font-size: 0.8rem; color: #999;">Apache/2.4.41 (Ubuntu) Server at github.io Port 443</p>
     </div>
 
-    <!-- THE REAL UI -->
+    <!-- MAIN DASHBOARD -->
     <div id="mainUI">
-        <div class="container">
-            <h1>Elite Cloaker v22</h1>
-            <input type="password" id="passInput" placeholder="Access Key...">
-            <div id="authArea" style="display:none;">
-                <input type="text" id="urlInput" value="https://www.google.com">
-                <input type="text" id="customPanic" value="https://classroom.google.com">
-                <button class="launch-btn" onclick="launch()">Launch Blob Cloak</button>
-                <div id="favList"></div>
+        <div id="cloakBox" class="container">
+            <h1>Elite Cloaker v27</h1>
+            <input type="password" id="pswd" placeholder="Access Key...">
+            
+            <div id="controls" style="display:none;">
+                <label style="display:block;text-align:left;margin-left:20px;font-size:0.8rem;color:#888;">Target Site:</label>
+                <input type="text" id="target" value="https://www.wikipedia.org" oninput="updatePreview()">
+                
+                <div id="previewBox">
+                    <iframe id="previewFrame" src="https://www.wikipedia.org"></iframe>
+                </div>
+
+                <label style="display:block;text-align:left;margin-left:20px;margin-top:10px;font-size:0.8rem;color:#888;">Panic Escape Link:</label>
+                <input type="text" id="panic" value="https://classroom.google.com">
+                
+                <button class="launch-btn" onclick="launch()">Launch Stealth Tab</button>
+
+                <div class="stealth-option">
+                    <input type="checkbox" id="stealthToggle" onchange="toggleStealth()">
+                    <span>Enable Invisibility (Reveal on Hover)</span>
+                </div>
             </div>
-            <button id="unlockBtn" onclick="checkPass()">Unlock</button>
+            
+            <button id="unlckBtn" onclick="verify()">Unlock Dashboard</button>
         </div>
     </div>
 
     <script>
-        const MASTER_PASSWORD = "123";
+        const PASS = "123";
 
-        function showLogin() {
-            document.getElementById('shadowContainer').style.display = 'none';
-            document.getElementById('mainUI').style.display = 'flex';
-            document.title = "Classes";
+        function unlock() { 
+            document.getElementById('shadow').style.display='none'; 
+            document.getElementById('mainUI').style.display='flex'; 
+            document.title="Classes"; 
         }
 
-        function checkPass() {
-            if (document.getElementById('passInput').value === MASTER_PASSWORD) {
-                document.getElementById('authArea').style.display = 'block';
-                document.getElementById('unlockBtn').style.display = 'none';
-                document.getElementById('passInput').style.display = 'none';
+        function verify() { 
+            if(document.getElementById('pswd').value === PASS) { 
+                document.getElementById('controls').style.display='block'; 
+                document.getElementById('unlckBtn').style.display='none'; 
+                document.getElementById('pswd').style.display='none'; 
+            }
+        }
+
+        function toggleStealth() {
+            const isChecked = document.getElementById('stealthToggle').checked;
+            document.getElementById('cloakBox').classList.toggle('ghost-mode', isChecked);
+        }
+
+        function updatePreview() {
+            const url = document.getElementById('target').value;
+            if(url.startsWith('https://')) {
+                document.getElementById('previewFrame').src = url;
             }
         }
 
         function launch() {
-            const rawUrl = document.getElementById('urlInput').value;
-            const escapeUrl = document.getElementById('customPanic').value;
-            const proxyUrl = "https://www.blockaway.net_" + btoa(rawUrl).replace(/\//g, '_').replace(/\+/g, '-').replace(/=/g, '');
-
+            const url = document.getElementById('target').value;
+            const esc = document.getElementById('panic').value;
+            
             const pageHTML = `
                 <html>
                 <head>
@@ -72,23 +111,24 @@
                     <link rel="icon" type="image/png" href="https://ssl.gstatic.com">
                     <style>body,html{margin:0;padding:0;height:100%;overflow:hidden;background:#000;}iframe{width:100%;height:100%;border:none;}</style>
                 </head>
-                <body>
-                    <iframe src="${proxyUrl}"></iframe>
+                <body tabindex="-1">
+                    <iframe src="${url}"></iframe>
                     <script>
-                        window.onbeforeunload = () => "Safety";
+                        for(let i=0; i<15; i++){ history.pushState(null, "", "Classes"); }
+                        window.onbeforeunload = () => "Safety Check";
                         window.addEventListener('keydown', (e) => {
-                            if (e.code === 'Backslash') { window.onbeforeunload = null; window.location.replace("${escapeUrl}"); }
+                            if (e.code === 'Backslash') { window.onbeforeunload = null; window.location.replace("${esc}"); }
                         });
-                        setInterval(() => { window.focus(); }, 500);
+                        setInterval(() => { if (document.activeElement.tagName === 'IFRAME') { window.focus(); } }, 500);
                     <\/script>
                 </body>
                 </html>
             `;
 
             const blob = new Blob([pageHTML], { type: 'text/html' });
-            const blobUrl = URL.createObjectURL(blob);
             const win = window.open('about:blank', '_blank');
-            if (win) win.location.href = blobUrl;
+            if (win) { win.location.href = URL.createObjectURL(blob); }
+            else { alert("Popup Blocked!"); }
         }
     </script>
 </body>
