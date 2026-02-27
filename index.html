@@ -5,163 +5,111 @@
     <link rel="icon" type="image/png" href="https://ssl.gstatic.com">
     <style>
         body { background: #111; color: white; font-family: sans-serif; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .container { background: #222; padding: 30px; border-radius: 10px; text-align: center; border: 1px solid #444; width: 480px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); position: relative; }
+        .container { background: #222; padding: 30px; border-radius: 10px; text-align: center; border: 1px solid #444; width: 480px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
         #mainUI { display: none; } 
-        input, select { display: block; width: 90%; padding: 12px; margin: 8px auto; border-radius: 5px; border: 1px solid #555; background: #000; color: #0f0; font-family: monospace; font-size: 1rem; }
-        select { color: white; width: 95%; background: #333; }
+        input, select { display: block; width: 90%; padding: 12px; margin: 8px auto; border-radius: 5px; border: 1px solid #555; background: #000; color: #0f0; font-family: monospace; }
         button { padding: 10px 20px; cursor: pointer; background: #1a73e8; color: white; border: none; border-radius: 5px; font-weight: bold; margin-top: 5px; }
-        button:disabled { background: #444; cursor: not-allowed; color: #888; }
         .launch-btn { width: 100%; padding: 15px; background: #34a853; font-size: 1.1rem; margin-top: 15px; }
-        #favList { margin-top: 10px; text-align: left; background: #111; border-radius: 5px; padding: 10px; border: 1px solid #333; max-height: 120px; overflow-y: auto; }
+        .proxy-toggle { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 10px 0; font-size: 0.9rem; color: #ffc107; }
+        #favList { margin-top: 10px; text-align: left; background: #111; border-radius: 5px; padding: 10px; border: 1px solid #333; max-height: 100px; overflow-y: auto; }
         .fav-item { display: flex; justify-content: space-between; align-items: center; padding: 4px; border-bottom: 1px solid #222; font-size: 0.8rem; }
         .fav-link { color: #4285F4; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 80%; }
-        .info { font-size: 0.75rem; color: #888; margin-top: 15px; text-align: left; line-height: 1.4; }
+        .del-btn { color: #ea4335; background: none; border: none; cursor: pointer; font-size: 1.1rem; }
         label { display: block; text-align: left; margin: 8px 20px 0 20px; font-size: 0.85rem; color: #bbb; font-weight: bold; }
-        #lockoutMsg { color: #ea4335; font-size: 0.85rem; margin-top: 10px; font-weight: bold; display: none; }
     </style>
 </head>
 <body>
 
-    <!-- PASSWORD SCREEN -->
     <div id="passwordScreen" class="container">
-        <img src="https://ssl.gstatic.com" width="40" style="margin-bottom:10px;">
         <h1>Classes</h1>
-        <p id="subText" style="color:#aaa;">Sign in with Access Key</p>
-        <input type="password" id="passInput" placeholder="Password...">
-        <button id="unlockBtn" onclick="checkPass()">Continue</button>
-        <div id="lockoutMsg">SYSTEM WIPED & LOCKED.</div>
+        <input type="password" id="passInput" placeholder="Access Key...">
+        <button onclick="checkPass()">Unlock</button>
     </div>
 
-    <!-- MAIN UI -->
     <div id="mainUI" class="container">
-        <h1 style="color:#34a853;">Dashboard Active</h1>
-        <p style="font-size:0.8rem; color:#fbbc05;">Auto-Lock: 30s Inactive</p>
+        <h1>Cloaker v16 (Proxy Mode)</h1>
         
-        <label>1. Target Site:</label>
+        <label>Target Site:</label>
         <div style="display: flex; gap: 5px; padding: 0 20px;">
-            <input type="text" id="urlInput" value="https://www.wikipedia.org" style="width: 75%; margin: 0;">
+            <input type="text" id="urlInput" value="https://www.google.com" style="width: 75%; margin: 0;">
             <button onclick="saveLink()" style="margin: 0; width: 25%;">Save</button>
         </div>
 
+        <div class="proxy-toggle">
+            <input type="checkbox" id="useProxy" checked style="width: auto; margin: 0;">
+            <span>Enable Proxy (Bypass "Refused to Connect")</span>
+        </div>
+
         <div style="padding: 0 20px; margin-top: 5px;">
-            <input type="text" id="searchFavs" placeholder="Search saved links..." oninput="filterFavs()" style="padding: 8px; font-size: 0.8rem; margin-bottom: 0;">
+            <input type="text" id="searchFavs" placeholder="Search saved..." oninput="filterFavs()" style="padding: 8px; font-size: 0.8rem;">
             <div id="favList"></div>
         </div>
-        
-        <label>2. Custom Escape Link (Panic):</label>
+
+        <label>Panic Destination:</label>
         <input type="text" id="customPanic" value="https://classroom.google.com">
 
-        <button class="launch-btn" onclick="launch()">Launch Encrypted Tab</button>
-        
-        <div class="info">
-            • <b>Self-Destruct</b>: 10 fails wipes all data.<br>
-            • <b>Lockout</b>: 5 fails causes a 10m block.<br>
-            • <b>Panic Key</b>: Press <b> \ </b> (Backslash) inside tab.
-        </div>
+        <button class="launch-btn" onclick="launch()">Launch Elite Tab</button>
     </div>
 
     <script>
-        const MASTER_PASSWORD = "LAXMIANGLIKESTOBANG"; 
-        let autoLockTimer;
-        let failedAttempts = 0;
-        const LOCKOUT_LIMIT = 5;
-        const WIPE_LIMIT = 10;
-
+        const MASTER_PASSWORD = "123"; 
         function checkPass() {
-            const input = document.getElementById('passInput').value;
-            const btn = document.getElementById('unlockBtn');
-            const msg = document.getElementById('lockoutMsg');
-            const sub = document.getElementById('subText');
-
-            if (input === MASTER_PASSWORD) {
-                failedAttempts = 0;
+            if (document.getElementById('passInput').value === MASTER_PASSWORD) {
                 document.getElementById('passwordScreen').style.display = 'none';
                 document.getElementById('mainUI').style.display = 'block';
-                document.getElementById('passInput').value = ""; 
                 renderFavs();
-                startAutoLock();
-            } else {
-                failedAttempts++;
-                
-                if (failedAttempts >= WIPE_LIMIT) {
-                    localStorage.clear(); // DATA WIPED
-                    btn.disabled = true;
-                    msg.innerHTML = "SECURITY BREACH: DATA WIPED.";
-                    msg.style.display = 'block';
-                    sub.style.display = 'none';
-                } else if (failedAttempts >= LOCKOUT_LIMIT) {
-                    btn.disabled = true;
-                    msg.innerHTML = "LOCKOUT: Try again in 10 minutes.";
-                    msg.style.display = 'block';
-                    sub.style.display = 'none';
-                    setTimeout(() => {
-                        btn.disabled = false;
-                        msg.style.display = 'none';
-                        sub.style.display = 'block';
-                    }, 600000); 
-                } else {
-                    alert("Access Denied. " + (WIPE_LIMIT - failedAttempts) + " attempts until Self-Destruct.");
-                }
-            }
+            } else { alert("Denied."); }
         }
 
-        function startAutoLock() {
-            resetLockTimer();
-            ['mousemove', 'keypress', 'scroll'].forEach(e => window.addEventListener(e, resetLockTimer));
-        }
-
-        function resetLockTimer() {
-            clearTimeout(autoLockTimer);
-            autoLockTimer = setTimeout(() => {
-                document.getElementById('passwordScreen').style.display = 'block';
-                document.getElementById('mainUI').style.display = 'none';
-            }, 30000);
+        function saveLink() {
+            const url = document.getElementById('urlInput').value;
+            let favs = JSON.parse(localStorage.getItem('cloakerFavs') || "[]");
+            if (!favs.includes(url)) { favs.push(url); localStorage.setItem('cloakerFavs', JSON.stringify(favs)); renderFavs(); }
         }
 
         function renderFavs() {
             const list = document.getElementById('favList');
             const favs = JSON.parse(localStorage.getItem('cloakerFavs') || "[]");
-            list.innerHTML = favs.length ? '' : '<div style="color:#444; padding:5px; font-size:0.8rem;">No links saved</div>';
+            list.innerHTML = favs.length ? '' : '<div style="color:#444; padding:5px;">No Links</div>';
             favs.forEach((url, i) => {
-                list.innerHTML += `<div class="fav-item" data-url="${url.toLowerCase()}">
-                    <span class="fav-link" onclick="document.getElementById('urlInput').value='${url}'">${url}</span>
-                    <button style="color:#ea4335;background:none;border:none;cursor:pointer;" onclick="deleteFav(${i})">×</button>
-                </div>`;
-            });
-        }
-
-        function saveLink() {
-            const url = document.getElementById('urlInput').value;
-            if (!url.startsWith('https://')) return alert("Use https://");
-            let favs = JSON.parse(localStorage.getItem('cloakerFavs') || "[]");
-            if (!favs.includes(url)) {
-                favs.push(url);
-                localStorage.setItem('cloakerFavs', JSON.stringify(favs));
-                renderFavs();
-            }
-        }
-
-        function deleteFav(index) {
-            let favs = JSON.parse(localStorage.getItem('cloakerFavs') || "[]");
-            favs.splice(index, 1);
-            localStorage.setItem('cloakerFavs', JSON.stringify(favs));
-            renderFavs();
-        }
-
-        function filterFavs() {
-            const query = document.getElementById('searchFavs').value.toLowerCase();
-            document.querySelectorAll('.fav-item').forEach(item => {
-                item.style.display = item.getAttribute('data-url').includes(query) ? 'flex' : 'none';
+                list.innerHTML += `<div class="fav-item"><span class="fav-link" onclick="document.getElementById('urlInput').value='${url}'">${url}</span><button class="del-btn" onclick="deleteFav(${i})">×</button></div>`;
             });
         }
 
         function launch() {
-            const targetUrl = document.getElementById('urlInput').value;
-            const escapeUrl = document.getElementById('customPanic').value || "https://google.com";
-            const pageContent = `<html><head><title>Classes</title><link rel="icon" type="image/png" href="https://ssl.gstatic.com"><style>body,html{margin:0;padding:0;height:100%;overflow:hidden;background:#000;}iframe{width:100%;height:100%;border:none;}</style></head><body tabindex="-1"><iframe src="${targetUrl}"></iframe><script>window.onbeforeunload=()=>"Safety";for(let i=0;i<15;i++){history.pushState(null,"","");}document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden"){document.title="My Drive - Google Drive";}});window.addEventListener('keydown',(e)=>{if(e.code==='Backslash'){window.onbeforeunload=null;window.location.replace("${escapeUrl}");}});window.addEventListener('blur',()=>{setTimeout(()=>window.focus(),100);});<\/script></body></html>`;
+            let targetUrl = document.getElementById('urlInput').value;
+            const useProxy = document.getElementById('useProxy').checked;
+            const escapeUrl = document.getElementById('customPanic').value;
+
+            // PROXY LOGIC: Routes through Blockaway if toggle is on
+            if (useProxy) {
+                targetUrl = "https://www.blockaway.net_" + btoa(targetUrl).replace(/\//g, '_').replace(/\+/g, '-').replace(/=/g, '');
+            }
+
+            const pageContent = `
+                <html>
+                <head>
+                    <title>Classes</title>
+                    <link rel="icon" type="image/png" href="https://ssl.gstatic.com">
+                    <style>body, html { margin:0; padding:0; height:100%; overflow:hidden; background:#000; } iframe { width:100%; height:100%; border:none; }</style>
+                </head>
+                <body tabindex="-1">
+                    <iframe src="${targetUrl}"></iframe>
+                    <script>
+                        window.onbeforeunload = () => "Safety Check";
+                        window.addEventListener('keydown', (e) => {
+                            if (e.code === 'Backslash') {
+                                window.onbeforeunload = null; 
+                                window.location.replace("${escapeUrl}");
+                            }
+                        });
+                        setInterval(() => { if (document.activeElement.tagName === 'IFRAME') { window.focus(); } }, 500);
+                    <\/script>
+                </body>
+                </html>
+            `;
             const blob = new Blob([pageContent], { type: 'text/html' });
-            const win = window.open(URL.createObjectURL(blob), '_blank');
-            if (!win) alert("Popup Blocked!");
+            window.open(URL.createObjectURL(blob), '_blank');
         }
     </script>
 </body>
