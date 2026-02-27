@@ -6,11 +6,11 @@
     <style>
         body { background: #111; color: white; font-family: sans-serif; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
         .container { background: #222; padding: 30px; border-radius: 10px; text-align: center; border: 1px solid #444; width: 480px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
-        #mainUI { display: none; } 
-        input, select { display: block; width: 90%; padding: 12px; margin: 8px auto; border-radius: 5px; border: 1px solid #555; background: #000; color: #0f0; font-family: monospace; }
+        #mainUI, #lockoutMessage { display: none; } 
+        input { display: block; width: 90%; padding: 12px; margin: 8px auto; border-radius: 5px; border: 1px solid #555; background: #000; color: #0f0; font-family: monospace; }
         button { padding: 10px 20px; cursor: pointer; background: #1a73e8; color: white; border: none; border-radius: 5px; font-weight: bold; margin-top: 5px; }
         .launch-btn { width: 100%; padding: 15px; background: #34a853; font-size: 1.1rem; margin-top: 15px; }
-        .proxy-toggle { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 10px 0; font-size: 0.9rem; color: #ffc107; }
+        .warning { color: #ea4335; font-size: 0.85rem; margin-top: 10px; font-weight: bold; }
         #favList { margin-top: 10px; text-align: left; background: #111; border-radius: 5px; padding: 10px; border: 1px solid #333; max-height: 100px; overflow-y: auto; }
         .fav-item { display: flex; justify-content: space-between; align-items: center; padding: 4px; border-bottom: 1px solid #222; font-size: 0.8rem; }
         .fav-link { color: #4285F4; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 80%; }
@@ -18,47 +18,90 @@
         label { display: block; text-align: left; margin: 8px 20px 0 20px; font-size: 0.85rem; color: #bbb; font-weight: bold; }
     </style>
 </head>
-<body>
+<body onload="checkLockout()">
 
     <div id="passwordScreen" class="container">
         <h1>Classes</h1>
-        <input type="password" id="passInput" placeholder="Access Key...">
-        <button onclick="checkPass()">Unlock</button>
+        <div id="loginForm">
+            <input type="password" id="passInput" placeholder="Access Key...">
+            <button onclick="checkPass()">Unlock</button>
+            <div id="attemptsInfo" class="warning"></div>
+        </div>
+        <div id="lockoutMessage">
+            <h2 style="color: #ea4335;">System Locked</h2>
+            <p>Too many failed attempts. Try again in:</p>
+            <h1 id="timer">10:00</h1>
+        </div>
     </div>
 
     <div id="mainUI" class="container">
-        <h1>Cloaker v16 (Proxy Mode)</h1>
-        
+        <h1>Cloaker v18 (Security)</h1>
         <label>Target Site:</label>
         <div style="display: flex; gap: 5px; padding: 0 20px;">
             <input type="text" id="urlInput" value="https://www.google.com" style="width: 75%; margin: 0;">
             <button onclick="saveLink()" style="margin: 0; width: 25%;">Save</button>
         </div>
-
-        <div class="proxy-toggle">
-            <input type="checkbox" id="useProxy" checked style="width: auto; margin: 0;">
-            <span>Enable Proxy (Bypass "Refused to Connect")</span>
-        </div>
-
         <div style="padding: 0 20px; margin-top: 5px;">
             <input type="text" id="searchFavs" placeholder="Search saved..." oninput="filterFavs()" style="padding: 8px; font-size: 0.8rem;">
             <div id="favList"></div>
         </div>
-
         <label>Panic Destination:</label>
         <input type="text" id="customPanic" value="https://classroom.google.com">
-
         <button class="launch-btn" onclick="launch()">Launch Elite Tab</button>
+        <button onclick="localStorage.clear(); location.reload();" style="background: #555; font-size: 0.7rem; margin-top: 20px;">Manual Self-Destruct</button>
     </div>
 
     <script>
         const MASTER_PASSWORD = "123"; 
+
         function checkPass() {
-            if (document.getElementById('passInput').value === MASTER_PASSWORD) {
+            let attempts = parseInt(localStorage.getItem('failAttempts') || "0");
+            const input = document.getElementById('passInput').value;
+
+            if (input === MASTER_PASSWORD) {
+                localStorage.setItem('failAttempts', "0");
                 document.getElementById('passwordScreen').style.display = 'none';
                 document.getElementById('mainUI').style.display = 'block';
                 renderFavs();
-            } else { alert("Denied."); }
+            } else {
+                attempts++;
+                localStorage.setItem('failAttempts', attempts.toString());
+                
+                if (attempts >= 10) {
+                    alert("NUCLEAR WIPE TRIGGERED.");
+                    localStorage.clear();
+                    location.reload();
+                } else if (attempts >= 5) {
+                    const lockUntil = Date.now() + (10 * 60 * 1000);
+                    localStorage.setItem('lockUntil', lockUntil.toString());
+                    checkLockout();
+                } else {
+                    document.getElementById('attemptsInfo').innerText = `Attempts: ${attempts}/10 (Lock at 5, Wipe at 10)`;
+                }
+            }
+        }
+
+        function checkLockout() {
+            const lockUntil = parseInt(localStorage.getItem('lockUntil') || "0");
+            const now = Date.now();
+
+            if (now < lockUntil) {
+                document.getElementById('loginForm').style.display = 'none';
+                document.getElementById('lockoutMessage').style.display = 'block';
+                
+                const interval = setInterval(() => {
+                    const timeLeft = Math.ceil((parseInt(localStorage.getItem('lockUntil')) - Date.now()) / 1000);
+                    if (timeLeft <= 0) {
+                        clearInterval(interval);
+                        localStorage.setItem('failAttempts', "0");
+                        location.reload();
+                    } else {
+                        const mins = Math.floor(timeLeft / 60);
+                        const secs = timeLeft % 60;
+                        document.getElementById('timer').innerText = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+                    }
+                }, 1000);
+            }
         }
 
         function saveLink() {
@@ -77,14 +120,9 @@
         }
 
         function launch() {
-            let targetUrl = document.getElementById('urlInput').value;
-            const useProxy = document.getElementById('useProxy').checked;
+            let rawUrl = document.getElementById('urlInput').value;
             const escapeUrl = document.getElementById('customPanic').value;
-
-            // PROXY LOGIC: Routes through Blockaway if toggle is on
-            if (useProxy) {
-                targetUrl = "https://www.blockaway.net_" + btoa(targetUrl).replace(/\//g, '_').replace(/\+/g, '-').replace(/=/g, '');
-            }
+            const finalUrl = "https://www.croxyproxy.com_" + btoa(rawUrl).replace(/\//g, '_').replace(/\+/g, '-').replace(/=/g, '');
 
             const pageContent = `
                 <html>
@@ -94,7 +132,7 @@
                     <style>body, html { margin:0; padding:0; height:100%; overflow:hidden; background:#000; } iframe { width:100%; height:100%; border:none; }</style>
                 </head>
                 <body tabindex="-1">
-                    <iframe src="${targetUrl}"></iframe>
+                    <iframe src="${finalUrl}"></iframe>
                     <script>
                         window.onbeforeunload = () => "Safety Check";
                         window.addEventListener('keydown', (e) => {
