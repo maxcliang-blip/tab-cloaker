@@ -94,7 +94,7 @@
             // Ultraviolet encoding logic (XOR/Base64)
             // Note: Most UV setups use /service/ + encoded URL
             const encodedUrl = btoa(targetUrl).replace(/\//g, '_').replace(/\+/g, '-').replace(/=/g, '');
-            const finalUrl = `${uvBase}/service/${encodedUrl}`;
+            const finalUrl = `${uvBase}${encodedUrl}`;
 
             const pageHTML = `
                 <html>
