@@ -15,9 +15,15 @@
         button { padding: 10px 20px; cursor: pointer; background: #1a73e8; color: white; border: none; border-radius: 5px; font-weight: bold; width: 100%; margin-top: 10px; }
         .launch-btn { background: #34a853; font-size: 1.1rem; }
         label { display: block; text-align: left; margin: 10px 20px 0 20px; font-size: 0.8rem; color: #888; }
-        #favList { margin-top: 10px; text-align: left; background: #111; padding: 10px; border: 1px solid #333; max-height: 80px; overflow-y: auto; font-size: 0.8rem; }
+        #favList { margin-top: 10px; text-align: left; background: #111; padding: 10px; border: 1px solid #333; max-height: 150px; overflow-y: auto; font-size: 0.8rem; }
         .inline-row { display:flex; align-items:center; justify-content:flex-start; gap:8px; margin: 4px 20px; }
         .inline-row input[type="checkbox"] { width:auto; margin:0; }
+
+        .fav-item { display:flex; flex-direction:column; padding:4px 0; border-bottom:1px solid #222; }
+        .fav-main { display:flex; align-items:center; justify-content:space-between; gap:6px; }
+        .fav-link { cursor:pointer; color:#4285F4; word-break:break-all; }
+        .fav-remove { background:#b00020; color:#fff; border:none; border-radius:3px; padding:3px 6px; font-size:0.7rem; cursor:pointer; }
+        .fav-preview { font-size:0.7rem; color:#aaa; margin-left:2px; margin-top:2px; }
     </style>
 </head>
 <body onload="init()">
@@ -39,7 +45,6 @@
                 <label>2. Target Site:</label>
                 <input type="text" id="target" placeholder="https://google.com">
 
-                <!-- NEW: toggle to use proxy or not -->
                 <div class="inline-row">
                     <input type="checkbox" id="useProxy" checked>
                     <span style="font-size:0.8rem;color:#ccc;">Use proxy (UV/Scramjet)</span>
@@ -89,7 +94,6 @@
             document.title = "Classes";
         }
 
-        // simple URL validation
         function isValidUrl(str) {
             try { new URL(str); return true; } catch { return false; }
         }
@@ -116,7 +120,7 @@
                 failCount++;
                 localStorage.setItem('failCount', String(failCount));
                 if (failCount >= 5) {
-                    const lockForMs = 10 * 60 * 1000; // 10 minutes
+                    const lockForMs = 10 * 60 * 1000;
                     localStorage.setItem('lockUntil', String(Date.now() + lockForMs));
                     alert("Too many attempts. Locked for 10 minutes.");
                     location.reload();
@@ -126,20 +130,80 @@
             }
         }
 
-        function saveLink() {
+        // FAVORITES STORAGE FORMAT:
+        // encFavs: array of { u: base64(url), p: previewText }
+        function getFavs() {
+            try {
+                const raw = localStorage.getItem('encFavs');
+                if (!raw) return [];
+                const parsed = JSON.parse(raw);
+                // backward compat: if it was just an array of strings
+                if (parsed.length && typeof parsed[0] === 'string') {
+                    return parsed.map(s => ({ u: s, p: "" }));
+                }
+                return parsed;
+            } catch {
+                return [];
+            }
+        }
+        function setFavs(arr) {
+            localStorage.setItem('encFavs', JSON.stringify(arr));
+        }
+
+        async function saveLink() {
             const url = targetInput.value.trim();
             if (!isValidUrl(url)) {
                 alert("Enter a valid URL.");
                 return;
             }
-            let favs = JSON.parse(localStorage.getItem('encFavs') || "[]");
-            favs.push(btoa(url)); // basic obfuscation
-            localStorage.setItem('encFavs', JSON.stringify(favs));
+            let favs = getFavs();
+
+            const enc = btoa(url);
+            // avoid duplicates
+            if (favs.some(f => f.u === enc)) {
+                alert("That link is already saved.");
+                return;
+            }
+
+            // basic preview: try to fetch title; fall back to hostname
+            const preview = await fetchPreview(url);
+
+            favs.push({ u: enc, p: preview });
+            setFavs(favs);
+            renderFavs();
+        }
+
+        // Try to get a small preview (title or hostname).
+        async function fetchPreview(url) {
+            try {
+                // Most sites will block this with CORS; that's fine, we fallback.
+                const res = await fetch(url, { method: 'GET' });
+                const text = await res.text();
+                const match = text.match(/<title[^>]*>([^<]*)<\/title>/i);
+                if (match && match[1]) {
+                    return match[1].trim().slice(0, 80);
+                }
+            } catch (e) {
+                // ignore
+            }
+            try {
+                const u = new URL(url);
+                return u.hostname;
+            } catch {
+                return url.slice(0, 80);
+            }
+        }
+
+        function removeFav(index) {
+            let favs = getFavs();
+            if (index < 0 || index >= favs.length) return;
+            favs.splice(index, 1);
+            setFavs(favs);
             renderFavs();
         }
 
         function renderFavs() {
-            const favs = JSON.parse(localStorage.getItem('encFavs') || "[]");
+            const favs = getFavs();
             favListDiv.innerHTML = '';
 
             if (!favs.length) {
@@ -147,17 +211,43 @@
                 return;
             }
 
-            favs.forEach((enc) => {
-                const dec = atob(enc);
-                const div = document.createElement('div');
-                div.style.padding = '2px';
-                div.style.cursor = 'pointer';
-                div.style.color = '#4285F4';
-                div.textContent = dec;
-                div.addEventListener('click', () => {
+            favs.forEach((item, idx) => {
+                const dec = atob(item.u);
+                const previewText = item.p || "";
+
+                const wrapper = document.createElement('div');
+                wrapper.className = 'fav-item';
+
+                const mainRow = document.createElement('div');
+                mainRow.className = 'fav-main';
+
+                const linkSpan = document.createElement('span');
+                linkSpan.className = 'fav-link';
+                linkSpan.textContent = dec;
+                linkSpan.addEventListener('click', () => {
                     targetInput.value = dec;
                 });
-                favListDiv.appendChild(div);
+
+                const rmBtn = document.createElement('button');
+                rmBtn.className = 'fav-remove';
+                rmBtn.textContent = 'Remove';
+                rmBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    removeFav(idx);
+                });
+
+                mainRow.appendChild(linkSpan);
+                mainRow.appendChild(rmBtn);
+                wrapper.appendChild(mainRow);
+
+                if (previewText) {
+                    const prev = document.createElement('div');
+                    prev.className = 'fav-preview';
+                    prev.textContent = previewText;
+                    wrapper.appendChild(prev);
+                }
+
+                favListDiv.appendChild(wrapper);
             });
         }
 
@@ -173,27 +263,22 @@
                 return;
             }
 
-            // If using proxy, require base URL
             if (useProxy) {
                 if (!uvBase) {
                     alert("Set your proxy base URL first or uncheck 'Use proxy'.");
                     return;
                 }
-                // Save base for next time
                 localStorage.setItem('uvBase', uvBase);
             }
 
-            // Build final URL
             let finalUrl;
             if (useProxy) {
-                // Ultraviolet-style encoding (adapt if you switch to Scramjet)
                 const encodedUrl = btoa(targetUrl)
                     .replace(/\//g, '_')
                     .replace(/\+/g, '-')
                     .replace(/=/g, '');
                 finalUrl = `${uvBase}/${encodedUrl}`;
             } else {
-                // Direct (no proxy)
                 finalUrl = targetUrl;
             }
 
@@ -228,7 +313,6 @@
             win.location.href = URL.createObjectURL(blob);
         }
 
-        // Security check for lockout
         function checkSecurity() {
             const lockUntil = parseInt(localStorage.getItem('lockUntil') || "0", 10);
             if (Date.now() < lockUntil) {
@@ -236,7 +320,6 @@
             }
         }
 
-        // Optional: parent-page panic shortcut as well
         window.addEventListener('keydown', (e) => {
             if (e.ctrlKey && e.key === '\\') {
                 const esc = (panicInput && panicInput.value) || "https://classroom.google.com";
