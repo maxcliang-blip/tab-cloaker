@@ -18,7 +18,7 @@
         #favList { margin-top: 10px; text-align: left; background: #111; padding: 10px; border: 1px solid #333; max-height: 80px; overflow-y: auto; font-size: 0.8rem; }
     </style>
 </head>
-<body onload="checkSecurity()">
+<body onload="init()">
 
     <div id="shadow">
         <h1 id="error404">Error <span class="trigger" onclick="unlock()">4</span>04</h1>
@@ -31,18 +31,18 @@
             <input type="password" id="pswd" placeholder="Master Key...">
             
             <div id="controls" style="display:none;">
-                <label>1. Your Ultraviolet Proxy URL:</label>
-                <input type="text" id="uvBase" placeholder="https://uv-static-2-0-six.vercel.app/active" value="">
+                <label>1. Your Proxy Base URL:</label>
+                <input type="text" id="uvBase" placeholder="https://example.com/service/" value="">
                 
-                <label>2. Target Site (encoded through UV):</label>
+                <label>2. Target Site (encoded through proxy):</label>
                 <input type="text" id="target" placeholder="https://google.com">
                 <button onclick="saveLink()">Save Link</button>
-                <div id="favList"></div>
+                <div id="favList">No Saved Links</div>
 
                 <hr style="border:0; border-top:1px solid #444; margin:15px 0;">
                 
                 <input type="text" id="panic" value="https://classroom.google.com">
-                <button class="launch-btn" onclick="launch()">Launch UV Cloak</button>
+                <button class="launch-btn" onclick="launch()">Launch Cloak</button>
             </div>
             
             <button id="unlckBtn" onclick="verify()">Unlock</button>
@@ -50,51 +50,129 @@
     </div>
 
     <script>
-        const PASS = "LAXMIANGLIKESTOBANG"; 
+        const PASS = "LAXMIANGLIKESTOBANG"; // not real security
 
-        function unlock() { document.getElementById('shadow').style.display='none'; document.getElementById('mainUI').style.display='flex'; document.title="Classes"; }
-        
-        function verify() { 
-            if(document.getElementById('pswd').value === PASS) { 
-                document.getElementById('controls').style.display='block'; 
-                document.getElementById('unlckBtn').style.display='none'; 
-                document.getElementById('pswd').style.display='none';
+        // cache DOM refs
+        let shadow, mainUI, pswdInput, controlsDiv, unlockBtn, uvBaseInput, targetInput, favListDiv, panicInput;
+
+        function init() {
+            shadow = document.getElementById('shadow');
+            mainUI = document.getElementById('mainUI');
+            pswdInput = document.getElementById('pswd');
+            controlsDiv = document.getElementById('controls');
+            unlockBtn = document.getElementById('unlckBtn');
+            uvBaseInput = document.getElementById('uvBase');
+            targetInput = document.getElementById('target');
+            favListDiv = document.getElementById('favList');
+            panicInput = document.getElementById('panic');
+
+            checkSecurity();
+            renderFavs();
+
+            const savedBase = localStorage.getItem('uvBase') || "";
+            uvBaseInput.value = savedBase;
+        }
+
+        function unlock() {
+            shadow.style.display = 'none';
+            mainUI.style.display = 'flex';
+            document.title = "Classes";
+        }
+
+        // simple URL validation
+        function isValidUrl(str) {
+            try { new URL(str); return true; } catch { return false; }
+        }
+
+        function verify() {
+            const lockUntil = parseInt(localStorage.getItem('lockUntil') || "0", 10);
+            if (Date.now() < lockUntil) {
+                alert("System locked. Try again later.");
+                return;
+            }
+
+            const input = pswdInput.value;
+            let failCount = parseInt(localStorage.getItem('failCount') || "0", 10);
+
+            if (input === PASS) {
+                failCount = 0;
+                localStorage.setItem('failCount', "0");
+                controlsDiv.style.display = 'block';
+                unlockBtn.style.display = 'none';
+                pswdInput.style.display = 'none';
                 renderFavs();
-                // Load saved UV URL if exists
-                document.getElementById('uvBase').value = localStorage.getItem('uvBase') || "";
-            } 
+                uvBaseInput.value = localStorage.getItem('uvBase') || "";
+            } else {
+                failCount++;
+                localStorage.setItem('failCount', String(failCount));
+                if (failCount >= 5) {
+                    const lockForMs = 10 * 60 * 1000; // 10 minutes
+                    localStorage.setItem('lockUntil', String(Date.now() + lockForMs));
+                    alert("Too many attempts. Locked for 10 minutes.");
+                    location.reload();
+                } else {
+                    alert("Incorrect key.");
+                }
+            }
         }
 
         function saveLink() {
-            const url = document.getElementById('target').value;
+            const url = targetInput.value.trim();
+            if (!isValidUrl(url)) {
+                alert("Enter a valid URL.");
+                return;
+            }
             let favs = JSON.parse(localStorage.getItem('encFavs') || "[]");
-            favs.push(btoa(url)); // Basic obfuscation
+            favs.push(btoa(url)); // basic obfuscation
             localStorage.setItem('encFavs', JSON.stringify(favs));
             renderFavs();
         }
 
         function renderFavs() {
-            const list = document.getElementById('favList');
             const favs = JSON.parse(localStorage.getItem('encFavs') || "[]");
-            list.innerHTML = favs.length ? '' : 'No Saved Links';
+            favListDiv.innerHTML = '';
+
+            if (!favs.length) {
+                favListDiv.textContent = 'No Saved Links';
+                return;
+            }
+
             favs.forEach((enc) => {
                 const dec = atob(enc);
-                list.innerHTML += `<div style="padding:2px;cursor:pointer;color:#4285F4;" onclick="document.getElementById('target').value='${dec}'">${dec}</div>`;
+                const div = document.createElement('div');
+                div.style.padding = '2px';
+                div.style.cursor = 'pointer';
+                div.style.color = '#4285F4';
+                div.textContent = dec;
+                div.addEventListener('click', () => {
+                    targetInput.value = dec;
+                });
+                favListDiv.appendChild(div);
             });
         }
 
         function launch() {
-            const uvBase = document.getElementById('uvBase').value.replace(/\/$/, ""); 
-            const targetUrl = document.getElementById('target').value;
-            const esc = document.getElementById('panic').value;
+            const baseRaw = (uvBaseInput.value || '').trim();
+            const uvBase = baseRaw.replace(/\/$/, "");
+            if (!uvBase) {
+                alert("Set your proxy base URL first.");
+                return;
+            }
 
-            // Save UV base for next time
+            const targetUrl = targetInput.value.trim();
+            const esc = panicInput.value.trim() || "https://classroom.google.com";
+
+            if (!isValidUrl(targetUrl)) {
+                alert("Enter a valid target URL.");
+                return;
+            }
+
+            // Save base for next time
             localStorage.setItem('uvBase', uvBase);
 
-            // Ultraviolet encoding logic (XOR/Base64)
-            // Note: Most UV setups use /service/ + encoded URL
+            // Ultraviolet-style encoding (if you still use UV)
             const encodedUrl = btoa(targetUrl).replace(/\//g, '_').replace(/\+/g, '-').replace(/=/g, '');
-            const finalUrl = `${uvBase}${encodedUrl}`;
+            const finalUrl = `${uvBase}/${encodedUrl}`;
 
             const pageHTML = `
                 <html>
@@ -108,26 +186,40 @@
                     <script>
                         window.onbeforeunload = () => "Safety";
                         window.addEventListener('keydown', (e) => {
-                            if (e.code === 'Backslash') { window.onbeforeunload = null; window.location.replace("${esc}"); }
+                            if (e.code === 'Backslash') {
+                                window.onbeforeunload = null;
+                                window.location.replace("${esc}");
+                            }
                         });
-                        setInterval(() => { window.focus(); }, 500);
-                    <\/script>
+                    <\\/script>
                 </body>
                 </html>
             `;
 
             const blob = new Blob([pageHTML], { type: 'text/html' });
             const win = window.open('about:blank', '_blank');
-            if (win) win.location.href = URL.createObjectURL(blob);
+            if (!win) {
+                alert("Popup blocked. Allow popups for this site.");
+                return;
+            }
+            win.location.href = URL.createObjectURL(blob);
         }
 
-        // Security check for lockout from v30
+        // Security check for lockout
         function checkSecurity() {
-            const lockUntil = parseInt(localStorage.getItem('lockUntil') || "0");
+            const lockUntil = parseInt(localStorage.getItem('lockUntil') || "0", 10);
             if (Date.now() < lockUntil) {
                 document.body.innerHTML = "<h1 style='color:red; text-align:center; margin-top:100px;'>SYSTEM LOCKED</h1>";
             }
         }
+
+        // Optional: parent-page panic shortcut as well
+        window.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === '\\') {
+                const esc = (panicInput && panicInput.value) || "https://classroom.google.com";
+                window.location.replace(esc);
+            }
+        });
     </script>
 </body>
 </html>
