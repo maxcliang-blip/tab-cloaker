@@ -16,6 +16,8 @@
         .launch-btn { background: #34a853; font-size: 1.1rem; }
         label { display: block; text-align: left; margin: 10px 20px 0 20px; font-size: 0.8rem; color: #888; }
         #favList { margin-top: 10px; text-align: left; background: #111; padding: 10px; border: 1px solid #333; max-height: 80px; overflow-y: auto; font-size: 0.8rem; }
+        .inline-row { display:flex; align-items:center; justify-content:flex-start; gap:8px; margin: 4px 20px; }
+        .inline-row input[type="checkbox"] { width:auto; margin:0; }
     </style>
 </head>
 <body onload="init()">
@@ -34,8 +36,15 @@
                 <label>1. Your Proxy Base URL:</label>
                 <input type="text" id="uvBase" placeholder="https://example.com/service/" value="">
                 
-                <label>2. Target Site (encoded through proxy):</label>
+                <label>2. Target Site:</label>
                 <input type="text" id="target" placeholder="https://google.com">
+
+                <!-- NEW: toggle to use proxy or not -->
+                <div class="inline-row">
+                    <input type="checkbox" id="useProxy" checked>
+                    <span style="font-size:0.8rem;color:#ccc;">Use proxy (UV/Scramjet)</span>
+                </div>
+
                 <button onclick="saveLink()">Save Link</button>
                 <div id="favList">No Saved Links</div>
 
@@ -53,7 +62,7 @@
         const PASS = "LAXMIANGLIKESTOBANG"; // not real security
 
         // cache DOM refs
-        let shadow, mainUI, pswdInput, controlsDiv, unlockBtn, uvBaseInput, targetInput, favListDiv, panicInput;
+        let shadow, mainUI, pswdInput, controlsDiv, unlockBtn, uvBaseInput, targetInput, favListDiv, panicInput, useProxyCheckbox;
 
         function init() {
             shadow = document.getElementById('shadow');
@@ -65,6 +74,7 @@
             targetInput = document.getElementById('target');
             favListDiv = document.getElementById('favList');
             panicInput = document.getElementById('panic');
+            useProxyCheckbox = document.getElementById('useProxy');
 
             checkSecurity();
             renderFavs();
@@ -154,25 +164,38 @@
         function launch() {
             const baseRaw = (uvBaseInput.value || '').trim();
             const uvBase = baseRaw.replace(/\/$/, "");
-            if (!uvBase) {
-                alert("Set your proxy base URL first.");
-                return;
-            }
-
             const targetUrl = targetInput.value.trim();
-            const esc = panicInput.value.trim() || "https://classroom.google.com";
+            const esc = (panicInput.value.trim() || "https://classroom.google.com");
+            const useProxy = useProxyCheckbox.checked;
 
             if (!isValidUrl(targetUrl)) {
                 alert("Enter a valid target URL.");
                 return;
             }
 
-            // Save base for next time
-            localStorage.setItem('uvBase', uvBase);
+            // If using proxy, require base URL
+            if (useProxy) {
+                if (!uvBase) {
+                    alert("Set your proxy base URL first or uncheck 'Use proxy'.");
+                    return;
+                }
+                // Save base for next time
+                localStorage.setItem('uvBase', uvBase);
+            }
 
-            // Ultraviolet-style encoding (if you still use UV)
-            const encodedUrl = btoa(targetUrl).replace(/\//g, '_').replace(/\+/g, '-').replace(/=/g, '');
-            const finalUrl = `${uvBase}/${encodedUrl}`;
+            // Build final URL
+            let finalUrl;
+            if (useProxy) {
+                // Ultraviolet-style encoding (adapt if you switch to Scramjet)
+                const encodedUrl = btoa(targetUrl)
+                    .replace(/\//g, '_')
+                    .replace(/\+/g, '-')
+                    .replace(/=/g, '');
+                finalUrl = `${uvBase}/${encodedUrl}`;
+            } else {
+                // Direct (no proxy)
+                finalUrl = targetUrl;
+            }
 
             const pageHTML = `
                 <html>
