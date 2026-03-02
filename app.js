@@ -18,12 +18,16 @@ const DEFAULT_SETTINGS = {
 };
 
 let settings = null;
+let recentLaunches = []; // session-only: { url, time }
+let toastContainer;
+const IDLE_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
+let idleTimer = null;
 
 // DOM refs
 let shadow, mainUI, pswdInput, controlsDiv, unlockBtn, changePwBtn;
 let uvBaseInput, targetInput, targetNameInput, favListDiv, panicInput, useProxyCheckbox, statusMsg;
 let profileSelect, exportArea, tabPresetSelect, tabTitleInput, tabFaviconInput, faviconLink;
-let themeSelect, favSearchInput;
+let themeSelect, favSearchInput, recentListDiv;
 
 function loadSettings() {
     try {
@@ -77,6 +81,7 @@ function init() {
     faviconLink = document.getElementById('appFavicon');
     themeSelect = document.getElementById('themeSelect');
     favSearchInput = document.getElementById('favSearch');
+    recentListDiv = document.getElementById('recentList');
 
     settings = loadSettings();
     applyTheme();
@@ -86,6 +91,11 @@ function init() {
     checkSecurity();
 
     window.addEventListener('keydown', globalPanicHandler);
+
+    // Idle timer listeners
+    ['click', 'keydown', 'mousemove'].forEach(evt => {
+        window.addEventListener(evt, resetIdleTimer);
+    });
 
     if (tabTitleInput) {
         tabTitleInput.addEventListener('input', () => {
@@ -125,7 +135,7 @@ function verify() {
 
     const input = pswdInput.value.trim();
     if (!input) {
-        alert("Enter a password.");
+        showToast("Enter a password.");
         return;
     }
     const inputHash = hashPass(input);
@@ -143,6 +153,7 @@ function verify() {
         changePwBtn.style.display = 'inline-block';
         renderFavs();
         loadProfileToUI();
+        resetIdleTimer();
     } else {
         let failCount = parseInt(localStorage.getItem('failCount') || "0", 10);
         failCount++;
@@ -153,7 +164,7 @@ function verify() {
             alert("Too many attempts. Locked for 10 minutes.");
             location.reload();
         } else {
-            alert("Incorrect key.");
+            showToast("Incorrect key.");
         }
     }
 }
@@ -162,23 +173,37 @@ function startChangePassword() {
     const old = prompt("Enter current password:");
     if (!old) return;
     if (hashPass(old) !== settings.masterHash) {
-        alert("Wrong current password.");
+        showToast("Wrong current password.");
         return;
     }
     const np = prompt("Enter new password:");
     if (!np) return;
     const np2 = prompt("Confirm new password:");
     if (np !== np2) {
-        alert("Passwords do not match.");
+        showToast("Passwords do not match.");
         return;
     }
     settings.masterHash = hashPass(np);
     saveSettings();
-    alert("Password changed.");
+    showToast("Password changed.");
+}
+
+/* Toast notifications */
+function showToast(message, timeout = 2000) {
+    if (!toastContainer) {
+        toastContainer = document.getElementById('toastContainer');
+    }
+    if (!toastContainer) return;
+    const div = document.createElement('div');
+    div.className = 'toast';
+    div.textContent = message;
+    toastContainer.appendChild(div);
+    setTimeout(() => {
+        if (div.parentNode) div.parentNode.removeChild(div);
+    }, timeout);
 }
 
 /* Theme */
-
 function applyTheme() {
     const theme = settings.theme || "dark";
     document.body.setAttribute('data-theme', theme);
@@ -193,7 +218,6 @@ function changeTheme() {
 }
 
 /* Profiles */
-
 function populateProfilesUI() {
     profileSelect.innerHTML = "";
     for (const name in settings.profiles) {
@@ -218,13 +242,14 @@ function changeProfile() {
     saveSettings();
     loadProfileToUI();
     setStatus("Switched to profile: " + value);
+    showToast("Switched profile to " + value);
 }
 
 function addProfile() {
     const name = prompt("New profile name:");
     if (!name) return;
     if (settings.profiles[name]) {
-        alert("Profile already exists.");
+        showToast("Profile already exists.");
         return;
     }
     settings.profiles[name] = { uvBase: "", favs: [] };
@@ -232,6 +257,7 @@ function addProfile() {
     saveSettings();
     populateProfilesUI();
     loadProfileToUI();
+    showToast("Created profile: " + name);
 }
 
 function renameProfile() {
@@ -239,7 +265,7 @@ function renameProfile() {
     const newName = prompt("New name for profile '" + oldName + "':", oldName);
     if (!newName || newName === oldName) return;
     if (settings.profiles[newName]) {
-        alert("A profile with that name already exists.");
+        showToast("A profile with that name already exists.");
         return;
     }
     settings.profiles[newName] = settings.profiles[oldName];
@@ -248,12 +274,13 @@ function renameProfile() {
     saveSettings();
     populateProfilesUI();
     loadProfileToUI();
+    showToast("Renamed to: " + newName);
 }
 
 function deleteProfile() {
     const name = settings.activeProfile;
     if (name === "default") {
-        alert("You cannot delete the default profile.");
+        showToast("You cannot delete the default profile.");
         return;
     }
     if (!confirm("Delete profile '" + name + "'?")) return;
@@ -262,10 +289,10 @@ function deleteProfile() {
     saveSettings();
     populateProfilesUI();
     loadProfileToUI();
+    showToast("Deleted profile: " + name);
 }
 
 /* Favorites */
-
 function getFavs() {
     const prof = currentProfile();
     return prof.favs || [];
@@ -280,14 +307,14 @@ async function saveLink() {
     const url = targetInput.value.trim();
     const nickname = targetNameInput.value.trim();
     if (!isValidUrl(url)) {
-        alert("Enter a valid URL.");
+        showToast("Enter a valid URL.");
         return;
     }
     let favs = getFavs();
     const enc = btoa(url);
 
     if (favs.some(f => f.u === enc)) {
-        alert("That link is already saved.");
+        showToast("That link is already saved.");
         return;
     }
 
@@ -296,6 +323,7 @@ async function saveLink() {
     setFavs(favs);
     targetNameInput.value = "";
     renderFavs();
+    showToast("Link saved.");
 }
 
 async function fetchPreview(url) {
@@ -319,6 +347,7 @@ function removeFav(index) {
     favs.splice(index, 1);
     setFavs(favs);
     renderFavs();
+    showToast("Link removed.");
 }
 
 function moveFav(index, delta) {
@@ -415,8 +444,48 @@ function renderFavs() {
     });
 }
 
-/* Export / Import */
+/* Recent launches */
+function addRecent(url) {
+    const now = new Date();
+    recentLaunches.unshift({
+        url,
+        time: now.toLocaleTimeString()
+    });
+    if (recentLaunches.length > 10) recentLaunches.pop();
+    renderRecent();
+}
 
+function renderRecent() {
+    if (!recentListDiv) return;
+    recentListDiv.innerHTML = '';
+
+    if (!recentLaunches.length) {
+        recentListDiv.textContent = 'No recent launches';
+        return;
+    }
+
+    recentLaunches.forEach((item) => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'recent-item';
+
+        const linkSpan = document.createElement('span');
+        linkSpan.className = 'recent-link';
+        linkSpan.textContent = item.url.slice(0, 60) + (item.url.length > 60 ? '...' : '');
+        linkSpan.addEventListener('click', () => {
+            targetInput.value = item.url;
+        });
+
+        const timeSpan = document.createElement('span');
+        timeSpan.className = 'recent-time';
+        timeSpan.textContent = item.time;
+
+        wrapper.appendChild(linkSpan);
+        wrapper.appendChild(timeSpan);
+        recentListDiv.appendChild(wrapper);
+    });
+}
+
+/* Export / Import */
 function exportProfile() {
     const profName = settings.activeProfile;
     const prof = currentProfile();
@@ -427,12 +496,13 @@ function exportProfile() {
     };
     exportArea.value = JSON.stringify(obj, null, 2);
     setStatus("Profile exported to text area.");
+    showToast("Profile exported.");
 }
 
 function importProfile() {
     const text = exportArea.value.trim();
     if (!text) {
-        alert("Paste a JSON profile first.");
+        showToast("Paste a JSON profile first.");
         return;
     }
     try {
@@ -448,13 +518,13 @@ function importProfile() {
         populateProfilesUI();
         loadProfileToUI();
         setStatus("Profile imported as: " + name);
+        showToast("Profile imported as " + name + ".");
     } catch {
-        alert("Invalid JSON.");
+        showToast("Invalid JSON.");
     }
 }
 
 /* Launch */
-
 function launch() {
     setStatus("");
     const baseRaw = (uvBaseInput.value || '').trim();
@@ -464,13 +534,13 @@ function launch() {
     const useProxy = useProxyCheckbox.checked;
 
     if (!isValidUrl(targetUrl)) {
-        alert("Enter a valid target URL.");
+        showToast("Enter a valid target URL.");
         return;
     }
 
     if (useProxy) {
         if (!uvBase) {
-            alert("Set your proxy base URL first or uncheck 'Use proxy'.");
+            showToast("Set your proxy base URL first or uncheck 'Use proxy'.");
             return;
         }
         currentProfile().uvBase = uvBase;
@@ -491,93 +561,4 @@ function launch() {
     const pageHTML = `
         <html>
         <head>
-            <title>${settings.tabTitle || "Classes"}</title>
-            <link rel="icon" type="image/png" href="${settings.tabFavicon || "https://ssl.gstatic.com"}">
-            <style>body,html{margin:0;padding:0;height:100%;overflow:hidden;background:#000;}iframe{width:100%;height:100%;border:none;}</style>
-        </head>
-        <body>
-            <iframe src="${finalUrl}"></iframe>
-            <script>
-                window.onbeforeunload = () => "Safety";
-                window.addEventListener('keydown', (e) => {
-                    if (e.code === 'Backslash') {
-                        window.onbeforeunload = null;
-                        window.location.replace("${esc}");
-                    }
-                });
-            <\\/script>
-        </body>
-        </html>
-    `;
-
-    const blob = new Blob([pageHTML], { type: 'text/html' });
-    const win = window.open('about:blank', '_blank');
-    if (!win) {
-        alert("Popup blocked. Allow popups for this site.");
-        setStatus("Popup blocked by browser.");
-        return;
-    }
-    win.location.href = URL.createObjectURL(blob);
-    setStatus("Launched.");
-}
-
-/* Misc */
-
-function checkSecurity() {
-    const lockUntil = parseInt(localStorage.getItem('lockUntil') || "0", 10);
-    if (Date.now() < lockUntil) {
-        document.body.innerHTML = "<h1 style='color:red; text-align:center; margin-top:100px;'>SYSTEM LOCKED</h1>";
-    }
-}
-
-function globalPanicHandler(e) {
-    if (e.ctrlKey && e.key === '\\') {
-        const esc = (panicInput && panicInput.value) || "https://classroom.google.com";
-        window.location.replace(esc);
-    }
-}
-
-/* Tab appearance */
-
-function applyTabAppearance() {
-    document.title = settings.tabTitle || "Classes";
-    if (faviconLink) faviconLink.href = settings.tabFavicon || "https://ssl.gstatic.com";
-
-    tabTitleInput.value = settings.tabTitle || "";
-    tabFaviconInput.value = settings.tabFavicon || "";
-
-    const t = (settings.tabTitle || "").toLowerCase();
-    let preset = "custom";
-    if (t === "classes") preset = "classes";
-    else if (t.includes("docs")) preset = "docs";
-    else if (t.includes("drive")) preset = "drive";
-    else if (!t) preset = "blank";
-    tabPresetSelect.value = preset;
-}
-
-function applyTabPreset() {
-    const val = tabPresetSelect.value;
-    if (val === "classes") {
-        settings.tabTitle = "Classes";
-        settings.tabFavicon = "https://ssl.gstatic.com";
-    } else if (val === "docs") {
-        settings.tabTitle = "Untitled document - Google Docs";
-        settings.tabFavicon = "https://ssl.gstatic.com/docs/doclist/images/drive_2022q3_32dp.png";
-    } else if (val === "drive") {
-        settings.tabTitle = "My Drive - Google Drive";
-        settings.tabFavicon = "https://ssl.gstatic.com/drive/icons/shortcut-2020q4-32dp.png";
-    } else if (val === "blank") {
-        settings.tabTitle = "";
-        settings.tabFavicon = "about:blank";
-    }
-    if (val !== "custom") {
-        tabTitleInput.value = settings.tabTitle;
-        tabFaviconInput.value = settings.tabFavicon;
-    }
-    saveSettings();
-    applyTabAppearance();
-}
-
-function setStatus(msg) {
-    statusMsg.textContent = msg || "";
-}
+           
