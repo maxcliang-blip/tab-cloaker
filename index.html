@@ -72,6 +72,10 @@
                 <input type="text" id="favSearch" placeholder="Search favorites..." oninput="renderFavs()">
                 <div id="favList">No Saved Links</div>
 
+                <!-- Recent launches -->
+                <div class="section-title">Recent (this session)</div>
+                <div id="recentList">No recent launches</div>
+
                 <hr class="divider">
 
                 <div class="section-title">Panic</div>
@@ -92,6 +96,8 @@
             </div>
         </div>
     </div>
+
+    <div id="toastContainer"></div>
 
     <script src="app.js"></script>
 </body>
