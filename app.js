@@ -117,9 +117,16 @@ function init() {
 }
 
 function unlock() {
-    shadow.style.display = 'none';
-    mainUI.style.display = 'flex';
-    document.title = settings.tabTitle || "Classes";
+    // Direct DOM access (works from 404 page before init())
+    const shadowEl = document.getElementById('shadow');
+    const mainUIEl = document.getElementById('mainUI');
+    
+    if (shadowEl && mainUIEl) {
+        shadowEl.style.display = 'none';
+        mainUIEl.style.display = 'flex';
+        document.title = "Classes";
+        console.log("404 unlocked!"); // Debug
+    }
 }
 
 function isValidUrl(str) {
