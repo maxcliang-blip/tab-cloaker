@@ -7,6 +7,7 @@ const DEFAULT_SETTINGS = {
     masterHash: "",
     tabTitle: "Classes",
     tabFavicon: "https://ssl.gstatic.com",
+    theme: "dark",
     profiles: {
         "default": {
             uvBase: "",
@@ -22,6 +23,7 @@ let settings = null;
 let shadow, mainUI, pswdInput, controlsDiv, unlockBtn, changePwBtn;
 let uvBaseInput, targetInput, targetNameInput, favListDiv, panicInput, useProxyCheckbox, statusMsg;
 let profileSelect, exportArea, tabPresetSelect, tabTitleInput, tabFaviconInput, faviconLink;
+let themeSelect, favSearchInput;
 
 function loadSettings() {
     try {
@@ -36,6 +38,7 @@ function loadSettings() {
         if (!merged.activeProfile || !merged.profiles[merged.activeProfile]) {
             merged.activeProfile = "default";
         }
+        if (!merged.theme) merged.theme = "dark";
         return merged;
     } catch {
         return structuredClone(DEFAULT_SETTINGS);
@@ -72,8 +75,11 @@ function init() {
     tabTitleInput = document.getElementById('tabTitleInput');
     tabFaviconInput = document.getElementById('tabFaviconInput');
     faviconLink = document.getElementById('appFavicon');
+    themeSelect = document.getElementById('themeSelect');
+    favSearchInput = document.getElementById('favSearch');
 
     settings = loadSettings();
+    applyTheme();
     applyTabAppearance();
     populateProfilesUI();
     loadProfileToUI();
@@ -171,7 +177,22 @@ function startChangePassword() {
     alert("Password changed.");
 }
 
-// Profiles
+/* Theme */
+
+function applyTheme() {
+    const theme = settings.theme || "dark";
+    document.body.setAttribute('data-theme', theme);
+    if (themeSelect) themeSelect.value = theme;
+}
+
+function changeTheme() {
+    const theme = themeSelect.value;
+    settings.theme = theme;
+    saveSettings();
+    applyTheme();
+}
+
+/* Profiles */
 
 function populateProfilesUI() {
     profileSelect.innerHTML = "";
@@ -243,7 +264,7 @@ function deleteProfile() {
     loadProfileToUI();
 }
 
-// Favorites
+/* Favorites */
 
 function getFavs() {
     const prof = currentProfile();
@@ -300,16 +321,37 @@ function removeFav(index) {
     renderFavs();
 }
 
+function moveFav(index, delta) {
+    let favs = getFavs();
+    const newIndex = index + delta;
+    if (newIndex < 0 || newIndex >= favs.length) return;
+    const [item] = favs.splice(index, 1);
+    favs.splice(newIndex, 0, item);
+    setFavs(favs);
+    renderFavs();
+}
+
 function renderFavs() {
     const favs = getFavs();
     favListDiv.innerHTML = '';
 
-    if (!favs.length) {
+    const query = favSearchInput ? favSearchInput.value.trim().toLowerCase() : "";
+    const filtered = favs
+        .map((item, idx) => ({ item, idx }))
+        .filter(({ item }) => {
+            const dec = atob(item.u);
+            const nickname = item.name || "";
+            return !query ||
+                dec.toLowerCase().includes(query) ||
+                nickname.toLowerCase().includes(query);
+        });
+
+    if (!filtered.length) {
         favListDiv.textContent = 'No Saved Links';
         return;
     }
 
-    favs.forEach((item, idx) => {
+    filtered.forEach(({ item, idx }) => {
         const dec = atob(item.u);
         const nickname = item.name || "";
         const previewText = item.p || "";
@@ -328,16 +370,38 @@ function renderFavs() {
             targetNameInput.value = nickname;
         });
 
+        const buttonsWrap = document.createElement('div');
+
+        const upBtn = document.createElement('button');
+        upBtn.className = 'small-btn';
+        upBtn.textContent = '↑';
+        upBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            moveFav(idx, -1);
+        });
+
+        const downBtn = document.createElement('button');
+        downBtn.className = 'small-btn';
+        downBtn.textContent = '↓';
+        downBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            moveFav(idx, 1);
+        });
+
         const rmBtn = document.createElement('button');
         rmBtn.className = 'fav-remove';
-        rmBtn.textContent = 'Remove';
+        rmBtn.textContent = 'X';
         rmBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             removeFav(idx);
         });
 
+        buttonsWrap.appendChild(upBtn);
+        buttonsWrap.appendChild(downBtn);
+        buttonsWrap.appendChild(rmBtn);
+
         mainRow.appendChild(linkSpan);
-        mainRow.appendChild(rmBtn);
+        mainRow.appendChild(buttonsWrap);
         wrapper.appendChild(mainRow);
 
         if (previewText) {
@@ -351,7 +415,7 @@ function renderFavs() {
     });
 }
 
-// Export / Import
+/* Export / Import */
 
 function exportProfile() {
     const profName = settings.activeProfile;
@@ -389,7 +453,7 @@ function importProfile() {
     }
 }
 
-// Launch
+/* Launch */
 
 function launch() {
     setStatus("");
@@ -457,7 +521,7 @@ function launch() {
     setStatus("Launched.");
 }
 
-// Misc
+/* Misc */
 
 function checkSecurity() {
     const lockUntil = parseInt(localStorage.getItem('lockUntil') || "0", 10);
@@ -473,7 +537,7 @@ function globalPanicHandler(e) {
     }
 }
 
-// Tab appearance
+/* Tab appearance */
 
 function applyTabAppearance() {
     document.title = settings.tabTitle || "Classes";
