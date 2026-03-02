@@ -30,6 +30,16 @@
                     <button class="small-btn" onclick="deleteProfile()">Delete</button>
                 </div>
 
+                <!-- Theme -->
+                <div class="section-title">Theme</div>
+                <div class="row-space">
+                    <select id="themeSelect" onchange="changeTheme()">
+                        <option value="dark">Dark</option>
+                        <option value="light">Light</option>
+                        <option value="matrix">Matrix</option>
+                    </select>
+                </div>
+
                 <!-- Tab title / icon options -->
                 <div class="section-title">Tab Appearance</div>
                 <label>Tab preset:</label>
@@ -57,6 +67,9 @@
                 </div>
 
                 <button onclick="saveLink()">Save Link</button>
+
+                <!-- Favorites search + list -->
+                <input type="text" id="favSearch" placeholder="Search favorites..." oninput="renderFavs()">
                 <div id="favList">No Saved Links</div>
 
                 <hr class="divider">
