@@ -128,7 +128,7 @@ function unlock() {
         console.log("404 unlocked!"); // Debug
     }
 }
-
+window.unlock = unlock;
 function isValidUrl(str) {
     try { new URL(str); return true; } catch { return false; }
 }
