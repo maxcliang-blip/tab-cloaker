@@ -45,7 +45,6 @@ body[data-theme="matrix"] {
 }
 
 /* Layout and components */
-
 body {
     margin: 0;
     font-family: sans-serif;
@@ -134,7 +133,7 @@ label {
     color: #888;
 }
 
-#favList {
+#favList, #recentList {
     margin-top: 8px;
     text-align: left;
     background: var(--fav-bg);
@@ -162,7 +161,7 @@ label {
     margin: 0;
 }
 
-.fav-item {
+.fav-item, .recent-item {
     display: flex;
     flex-direction: column;
     padding: 4px 0;
@@ -176,7 +175,7 @@ label {
     gap: 6px;
 }
 
-.fav-link {
+.fav-link, .recent-link {
     cursor: pointer;
     color: #4285F4;
     word-break: break-all;
@@ -192,7 +191,7 @@ label {
     cursor: pointer;
 }
 
-.fav-preview {
+.fav-preview, .recent-time {
     font-size: 0.7rem;
     color: #aaa;
     margin-left: 2px;
@@ -237,4 +236,37 @@ textarea {
     border: 0;
     border-top: 1px solid #444;
     margin: 15px 0;
+}
+
+/* Toast notifications */
+#toastContainer {
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    pointer-events: none;
+}
+
+.toast {
+    min-width: 180px;
+    max-width: 260px;
+    background: rgba(0,0,0,0.85);
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: 5px;
+    font-size: 0.8rem;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+    pointer-events: auto;
+}
+
+body[data-theme="light"] .toast {
+    background: rgba(0,0,0,0.85);
+}
+
+body[data-theme="dark"] .toast,
+body[data-theme="matrix"] .toast {
+    background: rgba(20,20,20,0.95);
 }
