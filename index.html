@@ -78,8 +78,12 @@
 
                 <hr class="divider">
 
+                <!-- Panic with shortcuts button -->
                 <div class="section-title">Panic</div>
-                <input type="text" id="panic" value="https://classroom.google.com">
+                <div class="row-space">
+                    <input type="text" id="panic" value="https://classroom.google.com">
+                    <button class="small-btn" onclick="toggleShortcutsModal()" title="Keyboard shortcuts">?</button>
+                </div>
                 <button class="launch-btn" onclick="launch()">Launch Cloak</button>
                 <div id="statusMsg"></div>
 
@@ -93,6 +97,42 @@
                     <button class="small-btn" onclick="importProfile()">Import</button>
                 </div>
 
+                <!-- Keyboard Shortcuts Modal -->
+                <div id="shortcutsModal" class="modal-overlay" style="display:none;">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3>Keyboard Shortcuts</h3>
+                            <button class="close-btn" onclick="toggleShortcutsModal()">×</button>
+                        </div>
+                        <div class="shortcuts-table">
+                            <div class="shortcut-row">
+                                <span class="shortcut-key">Ctrl + L</span>
+                                <span class="shortcut-desc">Focus target URL</span>
+                            </div>
+                            <div class="shortcut-row">
+                                <span class="shortcut-key">Ctrl + S</span>
+                                <span class="shortcut-desc">Save current link</span>
+                            </div>
+                            <div class="shortcut-row">
+                                <span class="shortcut-key">Ctrl + Enter</span>
+                                <span class="shortcut-desc">Launch cloaked tab</span>
+                            </div>
+                            <div class="shortcut-row">
+                                <span class="shortcut-key">Ctrl + 1-9</span>
+                                <span class="shortcut-desc">Switch profile #1-9</span>
+                            </div>
+                            <div class="shortcut-row highlight">
+                                <span class="shortcut-key">Ctrl + \</span>
+                                <span class="shortcut-desc">Panic escape (works everywhere)</span>
+                            </div>
+                            <div class="shortcut-row">
+                                <span class="shortcut-key">\ (in launched tab)</span>
+                                <span class="shortcut-desc">Emergency escape</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
@@ -102,3 +142,4 @@
     <script src="app.js"></script>
 </body>
 </html>
+
