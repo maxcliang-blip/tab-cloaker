@@ -1,7 +1,56 @@
+/* Theme variables */
+:root {
+    --bg-main: #fff;
+    --text-main: #000;
+    --panel-bg: #f0f0f0;
+    --panel-border: #ccc;
+    --accent: #1a73e8;
+    --accent-2: #34a853;
+    --input-bg: #fff;
+    --input-border: #aaa;
+    --input-text: #000;
+    --fav-bg: #f8f8f8;
+    --fav-border: #ccc;
+    --danger: #b00020;
+}
+
+body[data-theme="dark"] {
+    --bg-main: #111;
+    --text-main: #fff;
+    --panel-bg: #222;
+    --panel-border: #444;
+    --accent: #1a73e8;
+    --accent-2: #34a853;
+    --input-bg: #000;
+    --input-border: #555;
+    --input-text: #0f0;
+    --fav-bg: #111;
+    --fav-border: #333;
+    --danger: #b00020;
+}
+
+body[data-theme="matrix"] {
+    --bg-main: #000;
+    --text-main: #0f0;
+    --panel-bg: #000;
+    --panel-border: #0a0;
+    --accent: #0f0;
+    --accent-2: #0c0;
+    --input-bg: #000;
+    --input-border: #0a0;
+    --input-text: #0f0;
+    --fav-bg: #000;
+    --fav-border: #060;
+    --danger: #f00;
+}
+
+/* Layout and components */
+
 body {
     margin: 0;
     font-family: sans-serif;
-    background: #fff;
+    background: var(--bg-main);
+    color: var(--text-main);
     height: 100vh;
     display: flex;
     flex-direction: column;
@@ -11,7 +60,7 @@ body {
 
 #shadow {
     text-align: center;
-    color: #333;
+    color: var(--text-main);
 }
 
 #error404 {
@@ -27,8 +76,8 @@ body {
 
 #mainUI {
     display: none;
-    background: #111;
-    color: white;
+    background: var(--bg-main);
+    color: var(--text-main);
     min-height: 100vh;
     width: 100%;
     flex-direction: column;
@@ -37,11 +86,11 @@ body {
 }
 
 .container {
-    background: #222;
+    background: var(--panel-bg);
     padding: 30px;
     border-radius: 10px;
     text-align: center;
-    border: 1px solid #444;
+    border: 1px solid var(--panel-border);
     width: 550px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.8);
 }
@@ -54,16 +103,16 @@ textarea {
     padding: 8px 12px;
     margin: 6px auto;
     border-radius: 5px;
-    border: 1px solid #555;
-    background: #000;
-    color: #0f0;
+    border: 1px solid var(--input-border);
+    background: var(--input-bg);
+    color: var(--input-text);
     font-family: monospace;
 }
 
 button {
     padding: 8px 16px;
     cursor: pointer;
-    background: #1a73e8;
+    background: var(--accent);
     color: white;
     border: none;
     border-radius: 5px;
@@ -72,7 +121,7 @@ button {
 }
 
 .launch-btn {
-    background: #34a853;
+    background: var(--accent-2);
     font-size: 1.05rem;
     width: 100%;
 }
@@ -88,11 +137,15 @@ label {
 #favList {
     margin-top: 8px;
     text-align: left;
-    background: #111;
+    background: var(--fav-bg);
     padding: 8px;
-    border: 1px solid #333;
+    border: 1px solid var(--fav-border);
     max-height: 150px;
     overflow-y: auto;
+    font-size: 0.8rem;
+}
+
+#favSearch {
     font-size: 0.8rem;
 }
 
@@ -130,7 +183,7 @@ label {
 }
 
 .fav-remove {
-    background: #b00020;
+    background: var(--danger);
     color: #fff;
     border: none;
     border-radius: 3px;
