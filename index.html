@@ -1,9 +1,44 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>404 Not Found</title>
     <link id="appFavicon" rel="icon" type="image/png" href="https://ssl.gstatic.com">
-    <link rel="stylesheet" href="style.css">
+    
+    <script src="https://your-proxy.com/scramjet/scramjet.codecs.js"></script>
+    <script src="https://your-proxy.com/scramjet/scramjet.config.js"></script>
+
+    <style>
+        /* --- THEME VARIABLES --- */
+        :root {
+            --bg-main: #fff; --text-main: #000; --panel-bg: #f0f0f0; --panel-border: #ccc;
+            --accent: #1a73e8; --accent-2: #34a853; --input-bg: #fff; --input-border: #aaa;
+            --input-text: #000; --fav-bg: #f8f8f8; --fav-border: #ccc; --danger: #b00020;
+        }
+        body[data-theme="dark"] {
+            --bg-main: #111; --text-main: #fff; --panel-bg: #222; --panel-border: #444;
+            --input-bg: #000; --input-border: #555; --input-text: #0f0; --fav-bg: #111;
+        }
+        body[data-theme="matrix"] {
+            --bg-main: #000; --text-main: #0f0; --panel-bg: #000; --panel-border: #0a0;
+            --accent: #0f0; --input-text: #0f0; --fav-border: #060; --danger: #f00;
+        }
+
+        /* --- LAYOUT --- */
+        body { margin: 0; font-family: sans-serif; background: var(--bg-main); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; overflow: hidden; }
+        #shadow { text-align: center; }
+        #error404 { font-size: 50px; cursor: default; user-select: none; }
+        .trigger { cursor: pointer; }
+        #mainUI { display: none; width: 100%; flex-direction: column; justify-content: center; align-items: center; }
+        .container { background: var(--panel-bg); padding: 30px; border-radius: 10px; border: 1px solid var(--panel-border); width: 500px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); max-height: 90vh; overflow-y: auto; }
+        input, select, textarea { width: 90%; padding: 8px; margin: 6px auto; border-radius: 5px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--input-text); font-family: monospace; display: block; }
+        button { padding: 8px 16px; cursor: pointer; background: var(--accent); color: white; border: none; border-radius: 5px; font-weight: bold; margin-top: 8px; }
+        .launch-btn { background: var(--accent-2); width: 100%; font-size: 1.1rem; }
+        .section-title { margin-top: 15px; font-size: 0.9rem; color: #888; text-align: left; padding: 0 20px; text-transform: uppercase; }
+        #favList, #recentList { margin: 10px auto; width: 90%; background: var(--fav-bg); border: 1px solid var(--fav-border); max-height: 120px; overflow-y: auto; font-size: 0.8rem; text-align: left; padding: 5px; }
+        .fav-item { display: flex; justify-content: space-between; padding: 5px; border-bottom: 1px solid var(--panel-border); }
+        .toast { position: fixed; bottom: 20px; right: 20px; background: rgba(0,0,0,0.8); color: #fff; padding: 10px 20px; border-radius: 5px; z-index: 1000; pointer-events: none; }
+    </style>
 </head>
 <body onload="init()">
 
@@ -17,129 +52,228 @@
             <h1>Elite Cloaker v31</h1>
             <input type="password" id="pswd" placeholder="Master Key...">
             <button id="unlckBtn" onclick="verify()">Unlock</button>
-            <button id="changePwBtn" style="display:none;" class="small-btn" onclick="startChangePassword()">Change Password</button>
+            <button id="changePwBtn" style="display:none;" onclick="startChangePassword()">Change Key</button>
             
             <div id="controls" style="display:none;">
-
-                <!-- Profiles -->
                 <div class="section-title">Profiles</div>
-                <div class="row-space">
+                <div style="display:flex; padding:0 20px; gap:5px;">
                     <select id="profileSelect" onchange="changeProfile()"></select>
-                    <button class="small-btn" onclick="addProfile()">New</button>
-                    <button class="small-btn" onclick="renameProfile()">Rename</button>
-                    <button class="small-btn" onclick="deleteProfile()">Delete</button>
+                    <button onclick="addProfile()">+</button>
                 </div>
-
-                <!-- Theme -->
-                <div class="section-title">Theme</div>
-                <div class="row-space">
-                    <select id="themeSelect" onchange="changeTheme()">
-                        <option value="dark">Dark</option>
-                        <option value="light">Light</option>
-                        <option value="matrix">Matrix</option>
-                    </select>
-                </div>
-
-                <!-- Tab title / icon options -->
-                <div class="section-title">Tab Appearance</div>
-                <label>Tab preset:</label>
+                
+                <div class="section-title">Tab Customization</div>
                 <select id="tabPreset" onchange="applyTabPreset()">
-                    <option value="classes">Classes (Classroom)</option>
-                    <option value="docs">Google Docs</option>
+                    <option value="classes">Google Classroom</option>
                     <option value="drive">Google Drive</option>
-                    <option value="blank">Blank</option>
-                    <option value="custom">Custom…</option>
+                    <option value="docs">Google Docs</option>
+                    <option value="custom">Custom...</option>
                 </select>
-                <input type="text" id="tabTitleInput" placeholder="Custom tab title">
-                <input type="text" id="tabFaviconInput" placeholder="Custom favicon URL">
+                <input type="text" id="tabTitleInput" placeholder="Tab Title">
 
-                <!-- Proxy + target -->
-                <label>1. Your Proxy Base URL (per profile, optional):</label>
-                <input type="text" id="uvBase" placeholder="https://example.com/service/">
-
-                <label>2. Target Site:</label>
-                <input type="text" id="target" placeholder="https://google.com">
-                <input type="text" id="targetName" placeholder="Nickname (optional)">
-
-                <div class="inline-row">
-                    <input type="checkbox" id="useProxy" checked>
-                    <span style="font-size:0.8rem;color:#ccc;">Use proxy (UV/Scramjet)</span>
+                <div class="section-title">Proxy & Target</div>
+                <input type="text" id="uvBase" placeholder="Proxy Base (e.g., https://proxy.com)">
+                <input type="text" id="target" placeholder="Target Site (https://...)">
+                
+                <div style="display:flex; align-items:center; justify-content:center; gap:10px; margin: 10px;">
+                    <input type="checkbox" id="useProxy" checked style="width:auto; margin:0;">
+                    <span style="font-size:0.8rem; color:#888;">Enable Scramjet Proxy</span>
                 </div>
 
-                <button onclick="saveLink()">Save Link</button>
-
-                <!-- Favorites search + list -->
-                <input type="text" id="favSearch" placeholder="Search favorites..." oninput="renderFavs()">
+                <div class="section-title">Quick Launch / Favorites</div>
                 <div id="favList">No Saved Links</div>
+                <button onclick="saveLink()">Save Current Link</button>
 
-                <!-- Recent launches -->
-                <div class="section-title">Recent (this session)</div>
-                <div id="recentList">No recent launches</div>
-
-                <hr class="divider">
-
-                <!-- Panic with shortcuts button -->
-                <div class="section-title">Panic</div>
-                <div class="row-space">
-                    <input type="text" id="panic" value="https://classroom.google.com">
-                    <button class="small-btn" onclick="toggleShortcutsModal()" title="Keyboard shortcuts">?</button>
-                </div>
+                <div class="section-title">Emergency Settings</div>
+                <input type="text" id="panic" value="https://classroom.google.com" placeholder="Panic URL">
+                
                 <button class="launch-btn" onclick="launch()">Launch Cloak</button>
-                <div id="statusMsg"></div>
-
-                <hr class="divider">
-
-                <!-- Export / Import -->
-                <div class="section-title">Export / Import (this profile)</div>
-                <textarea id="exportArea" placeholder="Profile JSON will appear here or paste to import"></textarea>
-                <div class="row-space">
-                    <button class="small-btn" onclick="exportProfile()">Export</button>
-                    <button class="small-btn" onclick="importProfile()">Import</button>
-                </div>
-
-                <!-- Keyboard Shortcuts Modal -->
-                <div id="shortcutsModal" class="modal-overlay" style="display:none;">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h3>Keyboard Shortcuts</h3>
-                            <button class="close-btn" onclick="toggleShortcutsModal()">×</button>
-                        </div>
-                        <div class="shortcuts-table">
-                            <div class="shortcut-row">
-                                <span class="shortcut-key">Ctrl + L</span>
-                                <span class="shortcut-desc">Focus target URL</span>
-                            </div>
-                            <div class="shortcut-row">
-                                <span class="shortcut-key">Ctrl + S</span>
-                                <span class="shortcut-desc">Save current link</span>
-                            </div>
-                            <div class="shortcut-row">
-                                <span class="shortcut-key">Ctrl + Enter</span>
-                                <span class="shortcut-desc">Launch cloaked tab</span>
-                            </div>
-                            <div class="shortcut-row">
-                                <span class="shortcut-key">Ctrl + 1-9</span>
-                                <span class="shortcut-desc">Switch profile #1-9</span>
-                            </div>
-                            <div class="shortcut-row highlight">
-                                <span class="shortcut-key">Ctrl + \</span>
-                                <span class="shortcut-desc">Panic escape (works everywhere)</span>
-                            </div>
-                            <div class="shortcut-row">
-                                <span class="shortcut-key">\ (in launched tab)</span>
-                                <span class="shortcut-desc">Emergency escape</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
+                <div id="statusMsg" style="font-size:0.7rem; color:#666; margin-top:5px;"></div>
             </div>
         </div>
     </div>
 
     <div id="toastContainer"></div>
 
-    <script src="app.js"></script>
+    <script>
+        /* --- STATE & SETTINGS --- */
+        let settings = JSON.parse(localStorage.getItem('cloakerSettings')) || {
+            masterHash: btoa("password"), 
+            theme: "dark",
+            activeProfile: "default",
+            profiles: { "default": { uvBase: "", favs: [] } },
+            tabTitle: "Classes",
+            tabFavicon: "https://ssl.gstatic.com"
+        };
+
+        function save() { localStorage.setItem('cloakerSettings', JSON.stringify(settings)); }
+
+        /* --- INITIALIZATION --- */
+        function init() {
+            document.body.setAttribute('data-theme', settings.theme);
+            const prof = settings.profiles[settings.activeProfile];
+            document.getElementById('uvBase').value = prof.uvBase || "";
+            document.getElementById('tabTitleInput').value = settings.tabTitle;
+            renderProfiles();
+            renderFavs();
+        }
+
+        /* --- SECURITY --- */
+        function unlock() {
+            document.getElementById('shadow').style.display = 'none';
+            document.getElementById('mainUI').style.display = 'flex';
+        }
+
+        function verify() {
+            const input = document.getElementById('pswd').value;
+            if (btoa(input) === settings.masterHash) {
+                document.getElementById('controls').style.display = 'block';
+                document.getElementById('pswd').style.display = 'none';
+                document.getElementById('unlckBtn').style.display = 'none';
+                document.getElementById('changePwBtn').style.display = 'inline-block';
+                showToast("Elite Access Granted");
+            } else {
+                showToast("Key Denied");
+            }
+        }
+
+        function startChangePassword() {
+            const current = prompt("Enter current key:");
+            if (btoa(current) !== settings.masterHash) return showToast("Wrong current key");
+            const next = prompt("Enter new key:");
+            if (next) {
+                settings.masterHash = btoa(next);
+                save();
+                showToast("Key Updated");
+            }
+        }
+
+        /* --- PROFILES --- */
+        function renderProfiles() {
+            const sel = document.getElementById('profileSelect');
+            sel.innerHTML = Object.keys(settings.profiles).map(p => 
+                `<option value="${p}" ${p === settings.activeProfile ? 'selected' : ''}>${p}</option>`
+            ).join('');
+        }
+
+        function changeProfile() {
+            settings.activeProfile = document.getElementById('profileSelect').value;
+            save();
+            init();
+            showToast("Profile Switched");
+        }
+
+        function addProfile() {
+            const name = prompt("Profile Name:");
+            if (name && !settings.profiles[name]) {
+                settings.profiles[name] = { uvBase: "", favs: [] };
+                settings.activeProfile = name;
+                save();
+                renderProfiles();
+                init();
+            }
+        }
+
+        /* --- CLOAKING ENGINE --- */
+        async function launch() {
+            const target = document.getElementById('target').value;
+            const proxyBase = document.getElementById('uvBase').value.replace(/\/$/, "");
+            const useProxy = document.getElementById('useProxy').checked;
+            const panicUrl = document.getElementById('panic').value;
+
+            if (!target.startsWith('http')) return showToast("Invalid URL");
+
+            // Update current profile proxy base
+            settings.profiles[settings.activeProfile].uvBase = proxyBase;
+            save();
+
+            let finalUrl = target;
+            if (useProxy && window.__scramjet$config) {
+                const encoded = __scramjet$config.codec.encode(target);
+                finalUrl = `${proxyBase}${__scramjet$config.prefix}${encoded}`;
+            }
+
+            const blobContent = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>${settings.tabTitle}</title>
+                    <link rel="icon" href="${settings.tabFavicon}">
+                    <style>body,html{margin:0;padding:0;height:100%;overflow:hidden;background:#000;}iframe{width:100%;height:100%;border:none;}</style>
+                </head>
+                <body>
+                    <iframe src="${finalUrl}"></iframe>
+                    <script>
+                        window.onbeforeunload = () => "Safety";
+                        window.addEventListener('keydown', (e) => {
+                            if (e.key === "\\\\") window.location.replace("${panicUrl}");
+                        });
+                    <\/script>
+                </body>
+                </html>
+            `;
+
+            const blob = new Blob([blobContent], { type: 'text/html' });
+            const blobUrl = URL.createObjectURL(blob);
+            const win = window.open('about:blank', '_blank');
+            if (win) {
+                win.location.href = blobUrl;
+                showToast("Cloak Deployed");
+            } else {
+                alert("Popup Blocked! Please allow popups.");
+            }
+        }
+
+        /* --- FAVORITES --- */
+        function saveLink() {
+            const url = document.getElementById('target').value;
+            if (!url) return;
+            settings.profiles[settings.activeProfile].favs.push(url);
+            save();
+            renderFavs();
+            showToast("Link Saved");
+        }
+
+        function renderFavs() {
+            const list = document.getElementById('favList');
+            const favs = settings.profiles[settings.activeProfile].favs;
+            list.innerHTML = favs.length ? favs.map(f => `
+                <div class="fav-item">
+                    <span onclick="document.getElementById('target').value='${f}'" style="cursor:pointer; overflow:hidden;">${f.split('//')[1].split('/')[0]}</span>
+                    <button onclick="deleteFav('${f}')" style="padding:2px 5px; background:var(--danger); margin:0;">X</button>
+                </div>
+            `).join('') : "No Saved Links";
+        }
+
+        function deleteFav(url) {
+            settings.profiles[settings.activeProfile].favs = settings.profiles[settings.activeProfile].favs.filter(f => f !== url);
+            save();
+            renderFavs();
+        }
+
+        /* --- UI HELPERS --- */
+        function showToast(msg) {
+            const t = document.createElement('div');
+            t.className = 'toast';
+            t.textContent = msg;
+            document.getElementById('toastContainer').appendChild(t);
+            setTimeout(() => t.remove(), 2500);
+        }
+
+        function applyTabPreset() {
+            const val = document.getElementById('tabPreset').value;
+            const presets = {
+                classes: ["Classes", "https://ssl.gstatic.com"],
+                drive: ["My Drive - Google Drive", "https://ssl.gstatic.com/images/branding/product/1x/drive_2020q4_32dp.png"],
+                docs: ["Untitled document - Google Docs", "https://ssl.gstatic.com/docs/documents/images/kix-favicon7.ico"]
+            };
+            if(presets[val]) {
+                settings.tabTitle = presets[val][0];
+                settings.tabFavicon = presets[val][1];
+                document.getElementById('tabTitleInput').value = settings.tabTitle;
+                save();
+                showToast("Preset Loaded");
+            }
+        }
+    </script>
 </body>
 </html>
-
