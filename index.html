@@ -49,12 +49,13 @@
 
         /* Fake Wiki Mode */
         #wikiMode { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: #fff; color:#000; overflow-y:auto; padding: 50px; z-index: 99999; text-align: left; }
+        .wiki-header { border-bottom: 1px solid #a2a9b1; font-family: 'Linux Libertine','Georgia','Times',serif; font-size: 1.8rem; }
     </style>
 </head>
 <body onload="init()">
 
     <div id="wikiMode" onclick="toggleWiki()">
-        <h1 style="border-bottom: 1px solid #a2a9b1;">Internet Protocol</h1>
+        <h1 class="wiki-header">Internet Protocol</h1>
         <p>From Wikipedia, the free encyclopedia</p>
         <p>The <b>Internet Protocol</b> (<b>IP</b>) is the principal communications protocol in the Internet protocol suite for relaying datagrams across network boundaries. Its routing function enables internetworking, and essentially establishes the Internet.</p>
         <p>IP has the task of delivering packets from the source host to the destination host solely based on the IP addresses in the packet headers. For this purpose, IP defines packet structures that encapsulate the data to be delivered...</p>
@@ -68,8 +69,11 @@
     <div id="mainUI">
         <div class="container">
             <h1>Elite Cloaker v31</h1>
-            <input type="password" id="pswd" placeholder="Master Key...">
-            <button id="unlckBtn" onclick="verify()">Unlock</button>
+            
+            <div id="loginArea">
+                <input type="password" id="pswd" placeholder="Master Key...">
+                <button id="unlckBtn" onclick="verify()" style="width: 100%;">Unlock System</button>
+            </div>
             
             <div id="controls" style="display:none;">
                 <div class="section-title" style="display:flex; align-items:center;">
@@ -87,7 +91,7 @@
                     <span style="font-size:0.8rem; color:#888;">Enable Proxy Logic</span>
                 </div>
 
-                <div class="section-title">Tab & Safety</div>
+                <div class="section-title">Safety & Presets</div>
                 <select id="tabPreset" onchange="applyTabPreset()">
                     <option value="classes">Google Classroom</option>
                     <option value="drive">Google Drive</option>
@@ -97,11 +101,15 @@
 
                 <div class="section-title">Favorites</div>
                 <div id="favList">No Saved Links</div>
-                <button onclick="saveLink()" style="font-size: 0.7rem; padding: 5px 10px;">+ Save Current Target</button>
+                <button onclick="saveLink()" style="font-size: 0.7rem; padding: 5px 10px; width: 100%;">+ Save Current Target</button>
 
                 <button class="launch-btn" onclick="launch()">Launch Cloak</button>
                 <button onclick="toggleWiki()" style="background:#666; width:100%; font-size:0.8rem;">Instant Stealth Mode (Wiki)</button>
                 
+                <div class="section-title">Security Settings</div>
+                <input type="password" id="newKey" placeholder="New Master Key">
+                <button onclick="updateKey()" style="background:var(--accent); width:100%; font-size:0.7rem;">Update Master Key</button>
+
                 <hr style="border:0; border-top:1px solid #444; margin: 20px 0;">
                 <button onclick="selfDestruct()" style="background:var(--danger); width:100%; font-size:0.7rem;">Self-Destruct (Wipe All Data)</button>
             </div>
@@ -125,12 +133,12 @@
 
         function init() {
             document.body.setAttribute('data-theme', settings.theme);
-            document.getElementById('uvBase').value = settings.lastBase;
+            document.getElementById('uvBase').value = settings.lastBase || "";
             renderFavs();
             checkProxyStatus();
         }
 
-        /* --- UI LOGIC --- */
+        /* --- SECURITY LOGIC --- */
         function unlock() {
             document.getElementById('shadow').style.display = 'none';
             document.getElementById('mainUI').style.display = 'flex';
@@ -140,10 +148,18 @@
             const input = document.getElementById('pswd').value;
             if (btoa(input) === settings.masterHash) {
                 document.getElementById('controls').style.display = 'block';
-                document.getElementById('pswd').style.display = 'none';
-                document.getElementById('unlckBtn').style.display = 'none';
-                showToast("Access Granted");
-            } else { showToast("Incorrect Key"); }
+                document.getElementById('loginArea').style.display = 'none';
+                showToast("System Unlocked");
+            } else { showToast("Access Denied"); }
+        }
+
+        function updateKey() {
+            const newKey = document.getElementById('newKey').value;
+            if (newKey.length < 4) return showToast("Key too short!");
+            settings.masterHash = btoa(newKey);
+            save();
+            document.getElementById('newKey').value = "";
+            showToast("Master Key Updated");
         }
 
         function toggleWiki() {
@@ -155,7 +171,7 @@
         async function checkProxyStatus() {
             const light = document.getElementById('statusLight');
             const base = document.getElementById('uvBase').value;
-            if (!base) { light.style.background = '#444'; return; }
+            if (!base) { light.style.background = '#444'; light.style.boxShadow = 'none'; return; }
 
             try {
                 await fetch(base, { mode: 'no-cors', cache: 'no-store' });
@@ -181,7 +197,7 @@
             const useProxy = document.getElementById('useProxy').checked;
             const panicUrl = document.getElementById('panic').value;
 
-            if (!target.startsWith('http')) return showToast("Enter full URL (https://)");
+            if (!target.startsWith('http')) return showToast("Use full URL (https://)");
 
             let finalUrl = target;
             if (useProxy) {
@@ -214,17 +230,17 @@
             const win = window.open('about:blank', '_blank');
             if (win) {
                 win.location.href = URL.createObjectURL(new Blob([blobHTML], { type: 'text/html' }));
-            } else { alert("Please allow popups!"); }
+            } else { alert("Enable Popups!"); }
         }
 
-        /* --- FAVORITES & UTILS --- */
+        /* --- UTILS --- */
         function saveLink() {
             const url = document.getElementById('target').value;
             if (url && !settings.favs.includes(url)) {
                 settings.favs.push(url);
                 save();
                 renderFavs();
-                showToast("Link Saved");
+                showToast("Target Saved");
             }
         }
 
@@ -245,7 +261,7 @@
         }
 
         function selfDestruct() {
-            if (confirm("WIPE ALL DATA?")) { localStorage.removeItem('cloakerSettings'); location.reload(); }
+            if (confirm("Wipe all data and reset key?")) { localStorage.removeItem('cloakerSettings'); location.reload(); }
         }
 
         function showToast(msg) {
@@ -267,7 +283,7 @@
                 settings.tabTitle = presets[val][0];
                 settings.tabFavicon = presets[val][1];
                 save();
-                showToast("Preset Applied");
+                showToast("Preset Loaded");
             }
         }
     </script>
