@@ -115,7 +115,7 @@ function init() {
         });
     }
 }
-
+window.init = init;
 function unlock() {
     // Direct DOM access (works from 404 page before init())
     const shadowEl = document.getElementById('shadow');
