@@ -57,6 +57,7 @@ function currentProfile() {
     return settings.profiles[settings.activeProfile];
 }
 
+// Called from <body onload="init()">
 function init() {
     shadow = document.getElementById('shadow');
     mainUI = document.getElementById('mainUI');
@@ -90,7 +91,7 @@ function init() {
     loadProfileToUI();
     checkSecurity();
 
-    window.addEventListener('keydown', globalPanicHandler);
+    window.addEventListener('keydown', globalKeyHandler);
 
     // Idle timer listeners
     ['click', 'keydown', 'mousemove'].forEach(evt => {
@@ -114,21 +115,23 @@ function init() {
             applyTabAppearance();
         });
     }
+
+    resetIdleTimer();
 }
-window.init = init;
+
+// Called from onclick="unlock()" in the 404
 function unlock() {
-    // Direct DOM access (works from 404 page before init())
     const shadowEl = document.getElementById('shadow');
     const mainUIEl = document.getElementById('mainUI');
-    
+
     if (shadowEl && mainUIEl) {
         shadowEl.style.display = 'none';
         mainUIEl.style.display = 'flex';
-        document.title = "Classes";
-        console.log("404 unlocked!"); // Debug
+        document.title = settings && settings.tabTitle ? settings.tabTitle : "Classes";
+        console.log("404 unlocked!");
     }
 }
-window.unlock = unlock;
+
 function isValidUrl(str) {
     try { new URL(str); return true; } catch { return false; }
 }
@@ -568,4 +571,171 @@ function launch() {
     const pageHTML = `
         <html>
         <head>
-           
+            <title>${settings.tabTitle || "Classes"}</title>
+            <link rel="icon" type="image/png" href="${settings.tabFavicon || "https://ssl.gstatic.com"}">
+            <style>body,html{margin:0;padding:0;height:100%;overflow:hidden;background:#000;}iframe{width:100%;height:100%;border:none;}</style>
+        </head>
+        <body>
+            <iframe src="${finalUrl}"></iframe>
+            <script>
+                window.onbeforeunload = () => "Safety";
+                window.addEventListener('keydown', (e) => {
+                    if (e.code === 'Backslash') {
+                        window.onbeforeunload = null;
+                        window.location.replace("${esc}");
+                    }
+                });
+            <\\/script>
+        </body>
+        </html>
+    `;
+
+    const blob = new Blob([pageHTML], { type: 'text/html' });
+    const win = window.open('about:blank', '_blank');
+    if (!win) {
+        showToast("Popup blocked. Allow popups for this site.", 3000);
+        setStatus("Popup blocked by browser.");
+        return;
+    }
+    win.location.href = URL.createObjectURL(blob);
+    setStatus("Launched.");
+    addRecent(targetUrl);
+}
+
+/* Idle auto-lock */
+function resetIdleTimer() {
+    if (!controlsDiv || controlsDiv.style.display === 'none') return;
+    if (idleTimer) clearTimeout(idleTimer);
+    idleTimer = setTimeout(onIdleTimeout, IDLE_TIMEOUT_MS);
+}
+
+function onIdleTimeout() {
+    mainUI.style.display = 'none';
+    shadow.style.display = 'block';
+    pswdInput.value = "";
+    pswdInput.style.display = '';
+    unlockBtn.style.display = '';
+    controlsDiv.style.display = 'none';
+    changePwBtn.style.display = 'none';
+    showToast("Auto-locked due to inactivity.", 3000);
+}
+
+/* Security lockout */
+function checkSecurity() {
+    const lockUntil = parseInt(localStorage.getItem('lockUntil') || "0", 10);
+    if (Date.now() < lockUntil) {
+        document.body.innerHTML = "<h1 style='color:red; text-align:center; margin-top:100px;'>SYSTEM LOCKED</h1>";
+    }
+}
+
+/* Global keyboard handler: panic + shortcuts */
+function globalKeyHandler(e) {
+    // Panic: Ctrl + \
+    if (e.ctrlKey && e.key === '\\') {
+        const esc = (panicInput && panicInput.value) || "https://classroom.google.com";
+        window.location.replace(esc);
+        return;
+    }
+
+    if (!controlsDiv || controlsDiv.style.display === 'none') return;
+
+    // Ctrl+L: focus target
+    if (e.ctrlKey && (e.key === 'l' || e.key === 'L')) {
+        e.preventDefault();
+        if (targetInput) targetInput.focus();
+        return;
+    }
+
+    // Ctrl+S: save link
+    if (e.ctrlKey && (e.key === 's' || e.key === 'S')) {
+        e.preventDefault();
+        saveLink();
+        return;
+    }
+
+    // Ctrl+Enter: launch
+    if (e.ctrlKey && e.key === 'Enter') {
+        e.preventDefault();
+        launch();
+        return;
+    }
+
+    // Ctrl + 1..9: switch profile
+    if (e.ctrlKey && e.key >= '1' && e.key <= '9') {
+        const idx = parseInt(e.key, 10) - 1;
+        if (!profileSelect) return;
+        if (idx >= 0 && idx < profileSelect.options.length) {
+            e.preventDefault();
+            profileSelect.selectedIndex = idx;
+            changeProfile();
+        }
+    }
+}
+
+/* Tab appearance */
+function applyTabAppearance() {
+    document.title = settings.tabTitle || "Classes";
+    if (faviconLink) faviconLink.href = settings.tabFavicon || "https://ssl.gstatic.com";
+
+    tabTitleInput.value = settings.tabTitle || "";
+    tabFaviconInput.value = settings.tabFavicon || "";
+
+    const t = (settings.tabTitle || "").toLowerCase();
+    let preset = "custom";
+    if (t === "classes") preset = "classes";
+    else if (t.includes("docs")) preset = "docs";
+    else if (t.includes("drive")) preset = "drive";
+    else if (!t) preset = "blank";
+    tabPresetSelect.value = preset;
+}
+
+function applyTabPreset() {
+    const val = tabPresetSelect.value;
+    if (val === "classes") {
+        settings.tabTitle = "Classes";
+        settings.tabFavicon = "https://ssl.gstatic.com";
+    } else if (val === "docs") {
+        settings.tabTitle = "Untitled document - Google Docs";
+        settings.tabFavicon = "https://ssl.gstatic.com/docs/doclist/images/drive_2022q3_32dp.png";
+    } else if (val === "drive") {
+        settings.tabTitle = "My Drive - Google Drive";
+        settings.tabFavicon = "https://ssl.gstatic.com/drive/icons/shortcut-2020q4-32dp.png";
+    } else if (val === "blank") {
+        settings.tabTitle = "";
+        settings.tabFavicon = "about:blank";
+    }
+    if (val !== "custom") {
+        tabTitleInput.value = settings.tabTitle;
+        tabFaviconInput.value = settings.tabFavicon;
+    }
+    saveSettings();
+    applyTabAppearance();
+}
+
+function setStatus(msg) {
+    statusMsg.textContent = msg || "";
+}
+
+/* Shortcuts modal */
+function toggleShortcutsModal() {
+    const modal = document.getElementById('shortcutsModal');
+    if (!modal) return;
+    modal.style.display = (modal.style.display === 'flex') ? 'none' : 'flex';
+}
+
+// Expose functions for HTML attributes
+window.init = init;
+window.unlock = unlock;
+window.changeTheme = changeTheme;
+window.changeProfile = changeProfile;
+window.addProfile = addProfile;
+window.renameProfile = renameProfile;
+window.deleteProfile = deleteProfile;
+window.saveLink = saveLink;
+window.launch = launch;
+window.exportProfile = exportProfile;
+window.importProfile = importProfile;
+window.applyTabPreset = applyTabPreset;
+window.startChangePassword = startChangePassword;
+window.toggleShortcutsModal = toggleShortcutsModal;
+
