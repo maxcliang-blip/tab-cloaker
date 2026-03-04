@@ -81,7 +81,6 @@
                 <button onclick="toggleWiki()" style="background:#666; font-size:0.8rem;">Instant Stealth Mode</button>
                 
                 <div class="section-title">Security Settings</div>
-                <p id="recoveryDisplay" style="font-size: 0.65rem; color: var(--accent-2); padding: 0 20px; margin: 5px 0;"></p>
                 <input type="password" id="newKey" placeholder="New Master Key">
                 <button onclick="updateKey()" style="font-size:0.7rem;">Update Master Key</button>
 
@@ -96,7 +95,7 @@
     <script>
         let settings = JSON.parse(localStorage.getItem('cloakerSettings')) || {
             masterHash: btoa("password"), 
-            recoveryKey: "RECOV-" + Math.random().toString(36).substring(2, 10).toUpperCase(),
+            recoveryKey: "SUPER-ADMIN-2026", // <--- CHANGE THIS FIXED RECOVERY KEY HERE
             theme: "dark",
             tabTitle: "Classes",
             tabFavicon: "https://ssl.gstatic.com",
@@ -110,7 +109,6 @@
         function init() {
             document.body.setAttribute('data-theme', settings.theme);
             document.getElementById('uvBase').value = settings.lastBase || "";
-            document.getElementById('recoveryDisplay').textContent = "Your Recovery Key: " + settings.recoveryKey;
             renderFavs();
             renderHistory();
             checkProxyStatus();
@@ -123,6 +121,7 @@
 
         function verify() {
             const input = document.getElementById('pswd').value;
+            // Checks against the current Master Hash OR the Fixed Recovery Key
             if (btoa(input) === settings.masterHash || input === settings.recoveryKey) {
                 document.getElementById('controls').style.display = 'block';
                 document.getElementById('loginArea').style.display = 'none';
