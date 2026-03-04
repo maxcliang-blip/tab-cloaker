@@ -10,7 +10,6 @@
     <script src="https://your-proxy.com/scramjet/scramjet.config.js"></script>
 
     <style>
-        /* --- THEME VARIABLES --- */
         :root {
             --bg-main: #fff; --text-main: #000; --panel-bg: #f0f0f0; --panel-border: #ccc;
             --accent: #1a73e8; --accent-2: #34a853; --input-bg: #fff; --input-border: #aaa;
@@ -20,45 +19,29 @@
             --bg-main: #111; --text-main: #fff; --panel-bg: #222; --panel-border: #444;
             --input-bg: #000; --input-border: #555; --input-text: #0f0; --fav-bg: #111;
         }
-        body[data-theme="matrix"] {
-            --bg-main: #000; --text-main: #0f0; --panel-bg: #000; --panel-border: #0a0;
-            --accent: #0f0; --input-text: #0f0; --fav-border: #060; --danger: #f00;
-        }
-
-        /* --- LAYOUT --- */
         body { margin: 0; font-family: sans-serif; background: var(--bg-main); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; overflow: hidden; }
         #shadow { text-align: center; }
         #error404 { font-size: 50px; cursor: default; user-select: none; }
         .trigger { cursor: pointer; }
-        
         #mainUI { display: none; width: 100%; flex-direction: column; justify-content: center; align-items: center; }
         .container { background: var(--panel-bg); padding: 30px; border-radius: 10px; border: 1px solid var(--panel-border); width: 500px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); max-height: 90vh; overflow-y: auto; position: relative; }
-        
         input, select { width: 90%; padding: 8px; margin: 6px auto; border-radius: 5px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--input-text); font-family: monospace; display: block; }
-        button { padding: 8px 16px; cursor: pointer; background: var(--accent); color: white; border: none; border-radius: 5px; font-weight: bold; margin-top: 8px; transition: 0.2s; }
+        button { padding: 8px 16px; cursor: pointer; background: var(--accent); color: white; border: none; border-radius: 5px; font-weight: bold; margin-top: 8px; transition: 0.2s; width: 100%; }
         button:hover { filter: brightness(1.2); }
-        
-        .launch-btn { background: var(--accent-2); width: 100%; font-size: 1.1rem; margin-top: 15px; }
+        .launch-btn { background: var(--accent-2); font-size: 1.1rem; margin-top: 15px; }
         .section-title { margin-top: 15px; font-size: 0.8rem; color: #888; text-align: left; padding: 0 20px; text-transform: uppercase; letter-spacing: 1px; }
-        
-        #favList { margin: 10px auto; width: 90%; background: var(--fav-bg); border: 1px solid var(--fav-border); max-height: 120px; overflow-y: auto; font-size: 0.8rem; padding: 5px; }
-        .fav-item { display: flex; justify-content: space-between; align-items: center; padding: 5px; border-bottom: 1px solid var(--panel-border); }
-        
-        #statusLight { width: 10px; height: 10px; background: #444; border-radius: 50%; display: inline-block; margin-left: 10px; border: 1px solid #000; transition: 0.3s; }
+        #favList, #historyList { margin: 10px auto; width: 90%; background: var(--fav-bg); border: 1px solid var(--fav-border); max-height: 100px; overflow-y: auto; font-size: 0.8rem; padding: 5px; }
+        .list-item { display: flex; justify-content: space-between; align-items: center; padding: 5px; border-bottom: 1px solid var(--panel-border); }
+        #statusLight { width: 10px; height: 10px; background: #444; border-radius: 50%; display: inline-block; margin-left: 10px; border: 1px solid #000; }
         .toast { position: fixed; bottom: 20px; right: 20px; background: rgba(0,0,0,0.9); color: #fff; padding: 10px 20px; border-radius: 5px; z-index: 1000; font-size: 0.9rem; pointer-events: none; }
-
-        /* Fake Wiki Mode */
         #wikiMode { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: #fff; color:#000; overflow-y:auto; padding: 50px; z-index: 99999; text-align: left; }
-        .wiki-header { border-bottom: 1px solid #a2a9b1; font-family: 'Linux Libertine','Georgia','Times',serif; font-size: 1.8rem; }
     </style>
 </head>
 <body onload="init()">
 
     <div id="wikiMode" onclick="toggleWiki()">
-        <h1 class="wiki-header">Internet Protocol</h1>
-        <p>From Wikipedia, the free encyclopedia</p>
-        <p>The <b>Internet Protocol</b> (<b>IP</b>) is the principal communications protocol in the Internet protocol suite for relaying datagrams across network boundaries. Its routing function enables internetworking, and essentially establishes the Internet.</p>
-        <p>IP has the task of delivering packets from the source host to the destination host solely based on the IP addresses in the packet headers. For this purpose, IP defines packet structures that encapsulate the data to be delivered...</p>
+        <h1 style="border-bottom: 1px solid #a2a9b1;">Internet Protocol</h1>
+        <p>The <b>Internet Protocol</b> (<b>IP</b>) is the principal communications protocol in the Internet protocol suite...</p>
     </div>
 
     <div id="shadow">
@@ -71,8 +54,8 @@
             <h1>Elite Cloaker v31</h1>
             
             <div id="loginArea">
-                <input type="password" id="pswd" placeholder="Master Key...">
-                <button id="unlckBtn" onclick="verify()" style="width: 100%;">Unlock System</button>
+                <input type="password" id="pswd" placeholder="Master Key or Recovery Key...">
+                <button onclick="verify()">Unlock System</button>
             </div>
             
             <div id="controls" style="display:none;">
@@ -86,32 +69,24 @@
                 <input type="text" id="uvBase" placeholder="Base URL (e.g., https://workstation.lhost.dev)">
                 <input type="text" id="target" placeholder="Target Site (https://...)">
                 
-                <div style="display:flex; align-items:center; justify-content:center; gap:10px; margin: 10px;">
-                    <input type="checkbox" id="useProxy" checked style="width:auto; margin:0;">
-                    <span style="font-size:0.8rem; color:#888;">Enable Proxy Logic</span>
-                </div>
-
-                <div class="section-title">Safety & Presets</div>
-                <select id="tabPreset" onchange="applyTabPreset()">
-                    <option value="classes">Google Classroom</option>
-                    <option value="drive">Google Drive</option>
-                    <option value="docs">Google Docs</option>
-                </select>
+                <div class="section-title">Safety & History</div>
+                <div id="historyList">No Recent History</div>
                 <input type="text" id="panic" value="https://classroom.google.com" placeholder="Panic URL">
 
                 <div class="section-title">Favorites</div>
                 <div id="favList">No Saved Links</div>
-                <button onclick="saveLink()" style="font-size: 0.7rem; padding: 5px 10px; width: 100%;">+ Save Current Target</button>
+                <button onclick="saveLink()" style="font-size: 0.7rem; padding: 5px 10px;">+ Save Target</button>
 
                 <button class="launch-btn" onclick="launch()">Launch Cloak</button>
-                <button onclick="toggleWiki()" style="background:#666; width:100%; font-size:0.8rem;">Instant Stealth Mode (Wiki)</button>
+                <button onclick="toggleWiki()" style="background:#666; font-size:0.8rem;">Instant Stealth Mode</button>
                 
                 <div class="section-title">Security Settings</div>
+                <p id="recoveryDisplay" style="font-size: 0.65rem; color: var(--accent-2); padding: 0 20px; margin: 5px 0;"></p>
                 <input type="password" id="newKey" placeholder="New Master Key">
-                <button onclick="updateKey()" style="background:var(--accent); width:100%; font-size:0.7rem;">Update Master Key</button>
+                <button onclick="updateKey()" style="font-size:0.7rem;">Update Master Key</button>
 
                 <hr style="border:0; border-top:1px solid #444; margin: 20px 0;">
-                <button onclick="selfDestruct()" style="background:var(--danger); width:100%; font-size:0.7rem;">Self-Destruct (Wipe All Data)</button>
+                <button onclick="selfDestruct()" style="background:var(--danger); font-size:0.7rem;">Self-Destruct (Wipe All)</button>
             </div>
         </div>
     </div>
@@ -119,13 +94,14 @@
     <div id="toastContainer"></div>
 
     <script>
-        /* --- CORE STATE --- */
         let settings = JSON.parse(localStorage.getItem('cloakerSettings')) || {
             masterHash: btoa("password"), 
+            recoveryKey: "RECOV-" + Math.random().toString(36).substring(2, 10).toUpperCase(),
             theme: "dark",
             tabTitle: "Classes",
             tabFavicon: "https://ssl.gstatic.com",
             favs: [],
+            history: [],
             lastBase: ""
         };
 
@@ -134,11 +110,12 @@
         function init() {
             document.body.setAttribute('data-theme', settings.theme);
             document.getElementById('uvBase').value = settings.lastBase || "";
+            document.getElementById('recoveryDisplay').textContent = "Your Recovery Key: " + settings.recoveryKey;
             renderFavs();
+            renderHistory();
             checkProxyStatus();
         }
 
-        /* --- SECURITY LOGIC --- */
         function unlock() {
             document.getElementById('shadow').style.display = 'none';
             document.getElementById('mainUI').style.display = 'flex';
@@ -146,10 +123,11 @@
 
         function verify() {
             const input = document.getElementById('pswd').value;
-            if (btoa(input) === settings.masterHash) {
+            if (btoa(input) === settings.masterHash || input === settings.recoveryKey) {
                 document.getElementById('controls').style.display = 'block';
                 document.getElementById('loginArea').style.display = 'none';
-                showToast("System Unlocked");
+                if (input === settings.recoveryKey) showToast("Recovery Key Used. Please reset Master Key.");
+                else showToast("System Unlocked");
             } else { showToast("Access Denied"); }
         }
 
@@ -158,134 +136,64 @@
             if (newKey.length < 4) return showToast("Key too short!");
             settings.masterHash = btoa(newKey);
             save();
-            document.getElementById('newKey').value = "";
             showToast("Master Key Updated");
         }
 
-        function toggleWiki() {
-            const wiki = document.getElementById('wikiMode');
-            wiki.style.display = (wiki.style.display === 'block') ? 'none' : 'block';
-        }
-
-        /* --- PROXY STATUS CHECK --- */
         async function checkProxyStatus() {
             const light = document.getElementById('statusLight');
             const base = document.getElementById('uvBase').value;
-            if (!base) { light.style.background = '#444'; light.style.boxShadow = 'none'; return; }
-
+            if (!base) { light.style.background = '#444'; return; }
             try {
                 await fetch(base, { mode: 'no-cors', cache: 'no-store' });
                 light.style.background = '#0f0';
-                light.style.boxShadow = '0 0 8px #0f0';
-            } catch (e) {
-                light.style.background = '#f00';
-                light.style.boxShadow = '0 0 8px #f00';
-            }
+            } catch (e) { light.style.background = '#f00'; }
         }
 
-        document.getElementById('uvBase').addEventListener('input', () => {
-            settings.lastBase = document.getElementById('uvBase').value;
-            save();
-            checkProxyStatus();
-        });
-
-        /* --- CLOAKING ENGINE --- */
         async function launch() {
             const target = document.getElementById('target').value;
             const proxyBase = document.getElementById('uvBase').value.replace(/\/$/, "");
             const engine = document.getElementById('proxyEngine').value;
-            const useProxy = document.getElementById('useProxy').checked;
             const panicUrl = document.getElementById('panic').value;
 
-            if (!target.startsWith('http')) return showToast("Use full URL (https://)");
+            if (!target.startsWith('http')) return showToast("Use full URL");
+
+            // Add to History
+            settings.history = [target, ...settings.history.filter(h => h !== target)].slice(0, 5);
+            settings.lastBase = proxyBase;
+            save();
+            renderHistory();
 
             let finalUrl = target;
-            if (useProxy) {
-                if (engine === "scramjet" && window.__scramjet$config) {
-                    const encoded = __scramjet$config.codec.encode(target);
-                    finalUrl = `${proxyBase}${__scramjet$config.prefix}${encoded}`;
-                } else if (engine === "rammerhead") {
-                    finalUrl = `${proxyBase}/main/${target}`;
-                }
+            if (engine === "scramjet" && window.__scramjet$config) {
+                finalUrl = `${proxyBase}${__scramjet$config.prefix}${__scramjet$config.codec.encode(target)}`;
+            } else if (engine === "rammerhead") {
+                finalUrl = `${proxyBase}/main/${target}`;
             }
 
-            const blobHTML = `
-                <html>
-                <head>
-                    <title>${settings.tabTitle}</title>
-                    <link rel="icon" href="${settings.tabFavicon}">
-                    <style>body,html{margin:0;padding:0;height:100%;overflow:hidden;background:#000;}iframe{width:100%;height:100%;border:none;}</style>
-                </head>
-                <body>
-                    <iframe src="${finalUrl}"></iframe>
-                    <script>
-                        window.addEventListener('keydown', (e) => {
-                            if (e.key === "\\\\") window.location.replace("${panicUrl}");
-                        });
-                    <\/script>
-                </body>
-                </html>
-            `;
-
+            const blobHTML = `<html><head><title>${settings.tabTitle}</title><link rel="icon" href="${settings.tabFavicon}"><style>body,html{margin:0;padding:0;height:100%;overflow:hidden;background:#000;}iframe{width:100%;height:100%;border:none;}</style></head><body><iframe src="${finalUrl}"></iframe><script>window.addEventListener('keydown',(e)=>{if(e.key==="\\\\")window.location.replace("${panicUrl}");});<\/script></body></html>`;
             const win = window.open('about:blank', '_blank');
-            if (win) {
-                win.location.href = URL.createObjectURL(new Blob([blobHTML], { type: 'text/html' }));
-            } else { alert("Enable Popups!"); }
-        }
-
-        /* --- UTILS --- */
-        function saveLink() {
-            const url = document.getElementById('target').value;
-            if (url && !settings.favs.includes(url)) {
-                settings.favs.push(url);
-                save();
-                renderFavs();
-                showToast("Target Saved");
-            }
+            if (win) win.location.href = URL.createObjectURL(new Blob([blobHTML], { type: 'text/html' }));
         }
 
         function renderFavs() {
             const list = document.getElementById('favList');
-            list.innerHTML = settings.favs.length ? settings.favs.map(f => `
-                <div class="fav-item">
-                    <span onclick="document.getElementById('target').value='${f}'" style="cursor:pointer; overflow:hidden;">${f}</span>
-                    <button onclick="deleteFav('${f}')" style="background:var(--danger); padding:2px 6px;">X</button>
-                </div>
-            `).join('') : "No Saved Links";
+            list.innerHTML = settings.favs.length ? settings.favs.map(f => `<div class="list-item"><span onclick="document.getElementById('target').value='${f}'" style="cursor:pointer; overflow:hidden;">${f}</span><button onclick="deleteFav('${f}')" style="background:var(--danger); width:auto; padding:2px 6px;">X</button></div>`).join('') : "No Saved Links";
         }
 
-        function deleteFav(url) {
-            settings.favs = settings.favs.filter(f => f !== url);
-            save();
-            renderFavs();
+        function renderHistory() {
+            const list = document.getElementById('historyList');
+            list.innerHTML = settings.history.length ? settings.history.map(h => `<div class="list-item" onclick="document.getElementById('target').value='${h}'" style="cursor:pointer; font-size:0.7rem;">${h}</div>`).join('') : "No Recent History";
         }
 
-        function selfDestruct() {
-            if (confirm("Wipe all data and reset key?")) { localStorage.removeItem('cloakerSettings'); location.reload(); }
+        function saveLink() {
+            const url = document.getElementById('target').value;
+            if (url && !settings.favs.includes(url)) { settings.favs.push(url); save(); renderFavs(); showToast("Saved"); }
         }
 
-        function showToast(msg) {
-            const t = document.createElement('div');
-            t.className = 'toast';
-            t.textContent = msg;
-            document.getElementById('toastContainer').appendChild(t);
-            setTimeout(() => t.remove(), 2500);
-        }
-
-        function applyTabPreset() {
-            const val = document.getElementById('tabPreset').value;
-            const presets = {
-                classes: ["Classes", "https://ssl.gstatic.com"],
-                drive: ["My Drive - Google Drive", "https://ssl.gstatic.com/images/branding/product/1x/drive_2020q4_32dp.png"],
-                docs: ["Untitled document - Google Docs", "https://ssl.gstatic.com/docs/documents/images/kix-favicon7.ico"]
-            };
-            if(presets[val]) {
-                settings.tabTitle = presets[val][0];
-                settings.tabFavicon = presets[val][1];
-                save();
-                showToast("Preset Loaded");
-            }
-        }
+        function deleteFav(url) { settings.favs = settings.favs.filter(f => f !== url); save(); renderFavs(); }
+        function toggleWiki() { const w = document.getElementById('wikiMode'); w.style.display = (w.style.display === 'block') ? 'none' : 'block'; }
+        function selfDestruct() { if (confirm("Wipe everything?")) { localStorage.removeItem('cloakerSettings'); location.reload(); } }
+        function showToast(msg) { const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; document.getElementById('toastContainer').appendChild(t); setTimeout(() => t.remove(), 2500); }
     </script>
 </body>
 </html>
