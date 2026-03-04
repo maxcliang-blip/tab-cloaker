@@ -60,13 +60,16 @@
             
             <div id="controls" style="display:none;">
                 <div class="section-title">
-                    Proxy Settings <span id="statusLight"></span>
+                    Connection Engine <span id="statusLight"></span>
                 </div>
-                <select id="proxyEngine" onchange="checkProxyStatus()">
+                <select id="proxyEngine" onchange="toggleProxyInput()">
                     <option value="scramjet">Scramjet (Stealth)</option>
                     <option value="rammerhead">Rammerhead (Compatibility)</option>
+                    <option value="none">None (Direct Load)</option>
                 </select>
-                <input type="text" id="uvBase" placeholder="Base URL (e.g., https://...)">
+                <div id="proxyInputArea">
+                    <input type="text" id="uvBase" placeholder="Base URL (e.g., https://...)">
+                </div>
                 <input type="text" id="target" placeholder="Target Site (https://...)">
                 
                 <div class="section-title">
@@ -96,15 +99,12 @@
     <div id="toastContainer"></div>
 
     <script>
-        // FIXED RECOVERY KEY
         const GLOBAL_RECOVERY_KEY = "SUPER-ADMIN-2026";
-
         let settings = JSON.parse(localStorage.getItem('cloakerSettings')) || {};
 
         function save() { localStorage.setItem('cloakerSettings', JSON.stringify(settings)); }
 
         function init() {
-            // Safety Defaults to prevent "undefined" errors
             if (!settings.masterHash) settings.masterHash = btoa("password");
             if (!settings.favs) settings.favs = [];
             if (!settings.history) settings.history = [];
@@ -117,6 +117,13 @@
             renderFavs();
             renderHistory();
             checkProxyStatus();
+            toggleProxyInput();
+        }
+
+        function toggleProxyInput() {
+            const engine = document.getElementById('proxyEngine').value;
+            const inputArea = document.getElementById('proxyInputArea');
+            inputArea.style.display = (engine === "none") ? "none" : "block";
         }
 
         function unlock() {
@@ -129,7 +136,7 @@
             if (btoa(input) === settings.masterHash || input === GLOBAL_RECOVERY_KEY) {
                 document.getElementById('controls').style.display = 'block';
                 document.getElementById('loginArea').style.display = 'none';
-                showToast(input === GLOBAL_RECOVERY_KEY ? "Recovery Mode Active" : "Unlocked");
+                showToast("Unlocked");
             } else { showToast("Denied"); }
         }
 
@@ -144,7 +151,8 @@
         async function checkProxyStatus() {
             const light = document.getElementById('statusLight');
             const base = document.getElementById('uvBase').value;
-            if (!base) { light.style.background = '#444'; return; }
+            const engine = document.getElementById('proxyEngine').value;
+            if (!base || engine === "none") { light.style.background = '#444'; return; }
             try {
                 await fetch(base, { mode: 'no-cors', cache: 'no-store' });
                 light.style.background = '#0f0';
@@ -160,13 +168,19 @@
             if (!target.startsWith('http')) return showToast("Need https://");
 
             settings.history = [target, ...settings.history.filter(h => h !== target)].slice(0, 5);
-            settings.lastBase = proxyBase;
+            if (engine !== "none") settings.lastBase = proxyBase;
             save();
             renderHistory();
 
-            let finalUrl = (engine === "rammerhead") ? `${proxyBase}/main/${target}` : target;
-            if (engine === "scramjet" && window.__scramjet$config) {
-                finalUrl = `${proxyBase}${__scramjet$config.prefix}${__scramjet$config.codec.encode(target)}`;
+            let finalUrl = target;
+            if (engine === "rammerhead") {
+                finalUrl = `${proxyBase}/main/${target}`;
+            } else if (engine === "scramjet") {
+                if (window.__scramjet$config) {
+                    finalUrl = `${proxyBase}${__scramjet$config.prefix}${__scramjet$config.codec.encode(target)}`;
+                } else {
+                    return showToast("Scramjet Script not loaded!");
+                }
             }
 
             const blobHTML = `<html><head><title>${settings.tabTitle}</title><link rel="icon" href="${settings.tabFavicon}"><style>body,html{margin:0;padding:0;height:100%;overflow:hidden;background:#000;}iframe{width:100%;height:100%;border:none;}</style></head><body><iframe src="${finalUrl}"></iframe><script>window.addEventListener('keydown',(e)=>{if(e.key==="\\\\")window.location.replace("${panicUrl}");});<\/script></body></html>`;
