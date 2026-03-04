@@ -3,106 +3,86 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title id="tabTitle">Calculator</title>
-    <link id="tabIcon" rel="icon" type="image/png" href="https://www.google.com/favicon.ico">
+    <title id="tabTitle">404 Not Found</title>
+    <link id="tabIcon" rel="icon" type="image/png" href="https://ssl.gstatic.com">
     
     <style>
         :root {
-            --bg-main: #111; --text-main: #fff; --panel-bg: #222; --panel-border: #444;
-            --accent: #1a73e8; --accent-2: #34a853; --input-bg: #000; --input-border: #555;
-            --input-text: #0f0; --fav-bg: #111; --fav-border: #ccc; --danger: #b00020;
+            --bg-main: #fff; --text-main: #000; --panel-bg: #f4f4f4; --panel-border: #ddd;
+            --accent: #1a73e8; --accent-2: #34a853; --input-bg: #fff; --input-border: #ccc;
+            --input-text: #000; --danger: #d93025;
         }
-        body { margin: 0; font-family: sans-serif; background: #000; color: #fff; height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden; }
+        body[data-theme="dark"] {
+            --bg-main: #111; --text-main: #eee; --panel-bg: #222; --panel-border: #444;
+            --input-bg: #000; --input-border: #555; --input-text: #0f0;
+        }
+        body { margin: 0; font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg-main); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; overflow: hidden; transition: 0.3s; }
         
-        /* --- CALC --- */
-        #calc { background: #1c1c1c; padding: 25px; border-radius: 15px; width: 340px; box-shadow: 0 20px 60px rgba(0,0,0,0.8); z-index: 5; }
-        #display { width: 100%; height: 70px; background: #1c1c1c; border: none; color: white; text-align: right; font-size: 2.5rem; margin-bottom: 20px; outline: none; font-family: 'Courier New', monospace; }
-        .buttons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-        .btn-c { padding: 20px; background: #333; border-radius: 50%; text-align: center; cursor: pointer; font-weight: bold; user-select: none; transition: 0.1s; font-size: 1.2rem; }
-        .btn-c:active { transform: scale(0.95); }
-        .btn-c.op { background: #f1a33c; }
+        /* --- HIDDEN LOGIN STYLES --- */
+        #shadow { text-align: center; user-select: none; }
+        #error404 { font-size: 5rem; margin: 0; font-weight: 300; }
+        .trigger { cursor: pointer; transition: color 0.2s; }
+        .trigger:hover { color: var(--accent); }
 
         /* --- CLOAKER UI --- */
-        #mainUI { display: none; width: 100%; flex-direction: column; justify-content: center; align-items: center; background: var(--bg-main); height: 100%; position: absolute; top:0; left:0; z-index: 100;}
-        .container { background: var(--panel-bg); padding: 25px; border-radius: 10px; border: 1px solid var(--panel-border); width: 450px; max-height: 90vh; overflow-y: auto; transition: opacity 0.4s ease; }
-        input, select { width: 92%; padding: 10px; margin: 8px auto; border-radius: 5px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--input-text); font-family: monospace; display: block; }
-        button { padding: 12px; cursor: pointer; background: var(--accent); color: white; border: none; border-radius: 5px; width: 100%; font-weight: bold; margin-top: 10px; }
+        #mainUI { display: none; width: 100%; flex-direction: column; justify-content: center; align-items: center; position: absolute; z-index: 100; }
+        .container { background: var(--panel-bg); padding: 25px; border-radius: 12px; border: 1px solid var(--panel-border); width: 420px; box-shadow: 0 15px 40px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto; transition: opacity 0.4s ease; }
+        input, select { width: 92%; padding: 10px; margin: 8px auto; border-radius: 6px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--input-text); font-family: monospace; display: block; outline: none; }
+        button { padding: 12px; cursor: pointer; background: var(--accent); color: white; border: none; border-radius: 6px; width: 100%; font-weight: 600; margin-top: 10px; transition: filter 0.2s; }
+        button:hover { filter: brightness(1.1); }
         .launch-btn { background: var(--accent-2); font-size: 1.1rem; }
         .section-title { margin-top: 15px; font-size: 0.7rem; color: #888; text-transform: uppercase; letter-spacing: 1px; padding: 0 10px; display: flex; justify-content: space-between; align-items: center; }
-        .profile-badge { font-size: 10px; padding: 2px 6px; border-radius: 10px; background: var(--accent); color: white; }
-        .toast { position: fixed; bottom: 20px; right: 20px; background: #333; color: #fff; padding: 10px 20px; border-radius: 5px; z-index: 1000; border: 1px solid var(--accent); }
-        .sub-panel { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; margin-top: 10px; border: 1px dashed #555; }
-        .sync-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+        .sub-panel { background: rgba(0,0,0,0.05); padding: 10px; border-radius: 8px; margin-top: 10px; border: 1px dashed #bbb; }
+        .toast { position: fixed; bottom: 20px; right: 20px; background: #333; color: #fff; padding: 10px 20px; border-radius: 6px; font-size: 0.9rem; z-index: 1000; }
     </style>
 </head>
 <body onload="init()">
 
-    <div id="calc">
-        <input type="text" id="display" disabled value="0">
-        <div class="buttons">
-            <div class="btn-c" onclick="clearCalc()">AC</div>
-            <div class="btn-c" onclick="press('/')">÷</div>
-            <div class="btn-c" onclick="press('*')">×</div>
-            <div class="btn-c op" onclick="press('-')">−</div>
-            <div class="btn-c" onclick="press('7')">7</div>
-            <div class="btn-c" onclick="press('8')">8</div>
-            <div class="btn-c" onclick="press('9')">9</div>
-            <div class="btn-c op" onclick="press('+')">+</div>
-            <div class="btn-c" onclick="press('4')">4</div>
-            <div class="btn-c" onclick="press('5')">5</div>
-            <div class="btn-c" onclick="press('6')">6</div>
-            <div class="btn-c op" onclick="calculate()" style="background:#f1a33c">=</div>
-            <div class="btn-c" onclick="press('1')">1</div>
-            <div class="btn-c" onclick="press('2')">2</div>
-            <div class="btn-c" onclick="press('3')">3</div>
-            <div class="btn-c" onclick="press('0')" style="grid-column: span 2; border-radius: 30px;">0</div>
-            <div class="btn-c" onclick="press('.')">.</div>
-        </div>
+    <div id="shadow">
+        <h1 id="error404">Error <span class="trigger" onclick="showLogin()">4</span>04</h1>
+        <p>The requested URL was not found on this server.</p>
     </div>
 
     <div id="mainUI">
         <div class="container" id="uiContainer">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h1 style="font-size: 1.3rem; margin:0; color: var(--accent);">Elite Cloaker v40</h1>
-                <span id="activeProfileLabel" class="profile-badge">School</span>
-            </div>
             
-            <div id="controls">
-                <div class="section-title">Identity Profile</div>
-                <select id="profileSelect" onchange="switchProfile(this.value)">
-                    <option value="school">📚 School Mode</option>
-                    <option value="gaming">🎮 Gaming Mode</option>
-                </select>
+            <div id="loginArea">
+                <h2 style="margin-top:0; font-size:1.2rem;">System Restricted</h2>
+                <input type="password" id="pswd" placeholder="Enter Access Key...">
+                <button onclick="verify()">Unlock System</button>
+            </div>
 
+            <div id="dashboard" style="display:none;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h1 style="font-size: 1.2rem; margin:0; color: var(--accent);">Elite Cloaker v41</h1>
+                    <select id="profileSelect" style="width:auto; margin:0; padding:4px; font-size:10px;" onchange="switchProfile(this.value)">
+                        <option value="school">School</option>
+                        <option value="gaming">Gaming</option>
+                    </select>
+                </div>
+
+                <div class="section-title">Identity Config</div>
                 <div class="sub-panel">
-                    <div class="section-title" style="margin-top:0;">Profile Editor</div>
-                    <input type="text" id="editKey" placeholder="Unlock Code">
                     <input type="text" id="editTitle" placeholder="Tab Title">
-                    <input type="text" id="editIcon" placeholder="Favicon URL">
                     <input type="text" id="editPanic" placeholder="Panic Redirect URL">
-                    <button onclick="saveProfileChanges()" style="background:#444; font-size:0.7rem;">Apply Changes</button>
+                    <button onclick="saveProfileChanges()" style="background:#444; font-size:0.7rem;">Save Identity</button>
                 </div>
 
-                <div class="section-title">Cloud Sync (Export/Import)</div>
-                <div class="sync-grid">
-                    <button onclick="exportData()" style="background:#607d8b; font-size:0.7rem; margin:0;">Export Data</button>
-                    <button onclick="importData()" style="background:#673ab7; font-size:0.7rem; margin:0;">Import Data</button>
-                </div>
-
-                <div class="section-title">Automated Defense</div>
+                <div class="section-title">Security</div>
                 <div style="display:flex; align-items:center; gap:10px; padding: 0 10px;">
                     <input type="checkbox" id="autoGhostToggle" checked>
                     <label style="font-size:0.7rem; color:#888;">Auto-Ghost on blur</label>
                 </div>
 
-                <div class="section-title">Target Launch</div>
+                <div class="section-title">Launch</div>
                 <input type="password" id="target" placeholder="Target URL (https://...)">
                 <button class="launch-btn" onclick="launch()">Launch Cloak</button>
                 
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                    <button onclick="location.reload()" style="background:#333; font-size:0.7rem;">Lock UI</button>
-                    <button onclick="selfDestruct()" style="background:var(--danger); font-size:0.7rem;">Wipe All</button>
+                    <button onclick="exportData()" style="background:#607d8b; font-size:0.7rem;">Export</button>
+                    <button onclick="importData()" style="background:#673ab7; font-size:0.7rem;">Import</button>
                 </div>
+                <button onclick="location.reload()" style="background:#333; font-size:0.7rem;">Lock UI</button>
             </div>
         </div>
     </div>
@@ -113,10 +93,9 @@
         const RECOVERY = "SUPER-ADMIN-2026";
         let settings = JSON.parse(localStorage.getItem('cloakerSettings')) || {
             activeProfile: 'school',
-            school: { key: "1234", panic: "https://classroom.google.com", title: "Calculator", icon: "https://www.google.com/favicon.ico" },
-            gaming: { key: "7777", panic: "https://www.google.com", title: "My Files", icon: "https://ssl.gstatic.com/docs/doclist/images/favicon_v2.png" }
+            school: { key: "1234", panic: "https://classroom.google.com", title: "404 Not Found" },
+            gaming: { key: "7777", panic: "https://www.google.com", title: "My Drive" }
         };
-        let currentInput = "";
 
         function save() { localStorage.setItem('cloakerSettings', JSON.stringify(settings)); }
 
@@ -126,75 +105,65 @@
             window.onfocus = () => { document.getElementById('uiContainer').style.opacity = 1; };
         }
 
+        function showLogin() {
+            document.getElementById('shadow').style.display = 'none';
+            document.getElementById('mainUI').style.display = 'flex';
+        }
+
+        function verify() {
+            const input = document.getElementById('pswd').value;
+            const currentKey = settings[settings.activeProfile].key;
+            if (input === currentKey || input === RECOVERY) {
+                document.getElementById('loginArea').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'block';
+            } else {
+                showToast("Access Denied");
+            }
+        }
+
         function switchProfile(p) {
             settings.activeProfile = p;
             const data = settings[p];
-            document.getElementById('activeProfileLabel').textContent = p.toUpperCase();
             document.getElementById('tabTitle').textContent = data.title;
-            document.getElementById('tabIcon').href = data.icon;
             document.getElementById('profileSelect').value = p;
-            document.getElementById('editKey').value = data.key;
             document.getElementById('editTitle').value = data.title;
-            document.getElementById('editIcon').value = data.icon;
             document.getElementById('editPanic').value = data.panic;
             save();
         }
 
         function saveProfileChanges() {
             const p = settings.activeProfile;
-            settings[p].key = document.getElementById('editKey').value;
             settings[p].title = document.getElementById('editTitle').value;
-            settings[p].icon = document.getElementById('editIcon').value;
             settings[p].panic = document.getElementById('editPanic').value;
             save();
             switchProfile(p);
-            showToast("Changes Applied");
+            showToast("Identity Updated");
         }
 
-        /* --- EXPORT / IMPORT --- */
-        function exportData() {
-            const dataStr = btoa(JSON.stringify(settings));
-            navigator.clipboard.writeText(dataStr).then(() => {
-                showToast("Data Copied to Clipboard!");
-            });
-        }
-
-        function importData() {
-            const dataStr = prompt("Paste your exported code string here:");
-            if (dataStr) {
-                try {
-                    const decoded = JSON.parse(atob(dataStr));
-                    settings = decoded;
-                    save();
-                    location.reload();
-                } catch (e) {
-                    alert("Invalid Data String.");
-                }
-            }
-        }
-
-        /* --- CALC --- */
-        function press(val) { currentInput += val; document.getElementById('display').value = currentInput; }
-        function clearCalc() { currentInput = ""; document.getElementById('display').value = "0"; }
-        function calculate() {
-            const currentKey = settings[settings.activeProfile].key;
-            if (currentInput === currentKey || currentInput === RECOVERY) {
-                document.getElementById('calc').style.display = 'none';
-                document.getElementById('mainUI').style.display = 'flex';
-                return;
-            }
-            try { currentInput = eval(currentInput).toString(); document.getElementById('display').value = currentInput; }
-            catch { document.getElementById('display').value = "Error"; currentInput = ""; }
-        }
-
-        /* --- CLOAKER --- */
         function launch() {
             const target = document.getElementById('target').value;
             const pData = settings[settings.activeProfile];
             if (!target.startsWith('http')) return showToast("Use https://");
-            const frameHTML = `<html><head><title>${pData.title}</title><link rel="icon" href="${pData.icon}"><style>body,html{margin:0;padding:0;height:100%;overflow:hidden;background:#000;}iframe{width:100%;height:100%;border:none;}</style></head><body><iframe src="${target}"></iframe><script>window.onkeydown=(e)=>{if(e.key==="\\\\")window.location.replace("${pData.panic}");};<\/script></body></html>`;
+            
+            const frameHTML = `<html><head><title>${pData.title}</title><style>body,html{margin:0;padding:0;height:100%;overflow:hidden;background:#000;}iframe{width:100%;height:100%;border:none;}</style></head><body><iframe src="${target}"></iframe><script>window.onkeydown=(e)=>{if(e.key==="\\\\")window.location.replace("${pData.panic}");};<\/script></body></html>`;
             const win = window.open('about:blank', '_blank');
             if (win) { win.document.write(frameHTML); win.document.close(); }
+        }
+
+        function exportData() {
+            const dataStr = btoa(JSON.stringify(settings));
+            navigator.clipboard.writeText(dataStr).then(() => showToast("Config Copied!"));
+        }
+
+        function importData() {
+            const dataStr = prompt("Paste config string:");
+            if (dataStr) {
+                try {
+                    settings = JSON.parse(atob(dataStr));
+                    save();
+                    location.reload();
+                } catch (e) { alert("Invalid data."); }
+            }
         }
 
         function showToast(m) {
@@ -202,10 +171,8 @@
             t.className = 'toast';
             t.textContent = m;
             document.getElementById('toastContainer').appendChild(t);
-            setTimeout(() => t.remove(), 2500);
+            setTimeout(() => t.remove(), 2000);
         }
-
-        function selfDestruct() { if(confirm("Wipe all data?")) { localStorage.clear(); location.reload(); } }
     </script>
 </body>
 </html>
