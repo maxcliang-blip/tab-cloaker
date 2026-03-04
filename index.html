@@ -3,94 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>404 Not Found</title>
-    <link id="appFavicon" rel="icon" type="image/png" href="https://ssl.gstatic.com">
+    <title id="tabTitle">Calculator</title>
+    <link id="tabIcon" rel="icon" type="image/png" href="https://www.google.com/favicon.ico">
     
     <style>
         :root {
-            --bg-main: #fff; --text-main: #000; --panel-bg: #f0f0f0; --panel-border: #ccc;
-            --accent: #1a73e8; --accent-2: #34a853; --input-bg: #fff; --input-border: #aaa;
-            --input-text: #000; --fav-bg: #f8f8f8; --fav-border: #ccc; --danger: #b00020;
-        }
-        body[data-theme="dark"] {
             --bg-main: #111; --text-main: #fff; --panel-bg: #222; --panel-border: #444;
-            --input-bg: #000; --input-border: #555; --input-text: #0f0; --fav-bg: #111;
+            --accent: #1a73e8; --accent-2: #34a853; --input-bg: #000; --input-border: #555;
+            --input-text: #0f0; --fav-bg: #111; --fav-border: #ccc; --danger: #b00020;
         }
-        body { margin: 0; font-family: sans-serif; background: var(--bg-main); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; overflow: hidden; }
-        #shadow { text-align: center; }
-        #error404 { font-size: 50px; cursor: default; user-select: none; }
-        .trigger { cursor: pointer; }
-        #mainUI { display: none; width: 100%; flex-direction: column; justify-content: center; align-items: center; }
-        .container { background: var(--panel-bg); padding: 25px; border-radius: 10px; border: 1px solid var(--panel-border); width: 450px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); max-height: 90vh; overflow-y: auto; position: relative; }
-        input, select { width: 90%; padding: 8px; margin: 6px auto; border-radius: 5px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--input-text); font-family: monospace; display: block; }
-        button { padding: 8px 16px; cursor: pointer; background: var(--accent); color: white; border: none; border-radius: 5px; font-weight: bold; margin-top: 8px; transition: 0.2s; width: 100%; }
-        button:hover { filter: brightness(1.2); }
-        .launch-btn { background: var(--accent-2); font-size: 1.1rem; margin-top: 15px; }
-        .section-title { margin-top: 15px; font-size: 0.75rem; color: #888; text-align: left; padding: 0 10px; text-transform: uppercase; letter-spacing: 1px; display: flex; justify-content: space-between; align-items: center;}
-        #favList, #historyList { margin: 10px auto; width: 92%; background: var(--fav-bg); border: 1px solid var(--fav-border); max-height: 100px; overflow-y: auto; font-size: 0.8rem; padding: 5px; border-radius: 4px; }
-        .list-item { display: flex; justify-content: space-between; align-items: center; padding: 5px; border-bottom: 1px solid var(--panel-border); }
-        #statusLight { width: 10px; height: 10px; background: #444; border-radius: 50%; display: inline-block; border: 1px solid #000; }
-        .toast { position: fixed; bottom: 20px; right: 20px; background: rgba(0,0,0,0.9); color: #fff; padding: 10px 20px; border-radius: 5px; z-index: 1000; font-size: 0.9rem; pointer-events: none; }
-        #wikiMode { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: #fff; color:#000; overflow-y:auto; padding: 50px; z-index: 99999; text-align: left; }
+        body { margin: 0; font-family: sans-serif; background: #000; color: #fff; height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden; }
+        
+        /* --- CALC --- */
+        #calc { background: #1c1c1c; padding: 25px; border-radius: 15px; width: 340px; box-shadow: 0 20px 60px rgba(0,0,0,0.8); z-index: 5; }
+        #display { width: 100%; height: 70px; background: #1c1c1c; border: none; color: white; text-align: right; font-size: 2.5rem; margin-bottom: 20px; outline: none; font-family: 'Courier New', monospace; }
+        .buttons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+        .btn-c { padding: 20px; background: #333; border-radius: 50%; text-align: center; cursor: pointer; font-weight: bold; user-select: none; transition: 0.1s; font-size: 1.2rem; }
+        .btn-c:active { transform: scale(0.95); }
+        .btn-c.op { background: #f1a33c; }
+
+        /* --- CLOAKER UI --- */
+        #mainUI { display: none; width: 100%; flex-direction: column; justify-content: center; align-items: center; background: var(--bg-main); height: 100%; position: absolute; top:0; left:0; z-index: 100;}
+        .container { background: var(--panel-bg); padding: 25px; border-radius: 10px; border: 1px solid var(--panel-border); width: 450px; max-height: 90vh; overflow-y: auto; transition: opacity 0.4s ease; }
+        input, select { width: 92%; padding: 10px; margin: 8px auto; border-radius: 5px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--input-text); font-family: monospace; display: block; }
+        button { padding: 12px; cursor: pointer; background: var(--accent); color: white; border: none; border-radius: 5px; width: 100%; font-weight: bold; margin-top: 10px; }
+        .launch-btn { background: var(--accent-2); font-size: 1.1rem; }
+        .section-title { margin-top: 15px; font-size: 0.7rem; color: #888; text-transform: uppercase; letter-spacing: 1px; padding: 0 10px; display: flex; justify-content: space-between; align-items: center; }
+        .profile-badge { font-size: 10px; padding: 2px 6px; border-radius: 10px; background: var(--accent); color: white; }
+        .toast { position: fixed; bottom: 20px; right: 20px; background: #333; color: #fff; padding: 10px 20px; border-radius: 5px; z-index: 1000; border: 1px solid var(--accent); }
+        .sub-panel { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; margin-top: 10px; border: 1px dashed #555; }
+        .sync-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
     </style>
 </head>
 <body onload="init()">
 
-    <div id="wikiMode" onclick="toggleWiki()">
-        <h1 style="border-bottom: 1px solid #a2a9b1;">Internet Protocol</h1>
-        <p>The <b>Internet Protocol</b> (<b>IP</b>) is the principal communications protocol...</p>
-    </div>
-
-    <div id="shadow">
-        <h1 id="error404">Error <span class="trigger" onclick="unlock()">4</span>04</h1>
-        <p>The requested URL was not found on this server.</p>
+    <div id="calc">
+        <input type="text" id="display" disabled value="0">
+        <div class="buttons">
+            <div class="btn-c" onclick="clearCalc()">AC</div>
+            <div class="btn-c" onclick="press('/')">÷</div>
+            <div class="btn-c" onclick="press('*')">×</div>
+            <div class="btn-c op" onclick="press('-')">−</div>
+            <div class="btn-c" onclick="press('7')">7</div>
+            <div class="btn-c" onclick="press('8')">8</div>
+            <div class="btn-c" onclick="press('9')">9</div>
+            <div class="btn-c op" onclick="press('+')">+</div>
+            <div class="btn-c" onclick="press('4')">4</div>
+            <div class="btn-c" onclick="press('5')">5</div>
+            <div class="btn-c" onclick="press('6')">6</div>
+            <div class="btn-c op" onclick="calculate()" style="background:#f1a33c">=</div>
+            <div class="btn-c" onclick="press('1')">1</div>
+            <div class="btn-c" onclick="press('2')">2</div>
+            <div class="btn-c" onclick="press('3')">3</div>
+            <div class="btn-c" onclick="press('0')" style="grid-column: span 2; border-radius: 30px;">0</div>
+            <div class="btn-c" onclick="press('.')">.</div>
+        </div>
     </div>
 
     <div id="mainUI">
-        <div class="container">
-            <h1>Elite Cloaker v31</h1>
-            
-            <div id="loginArea">
-                <input type="password" id="pswd" placeholder="Master Key or Recovery Key...">
-                <button onclick="verify()">Unlock System</button>
+        <div class="container" id="uiContainer">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h1 style="font-size: 1.3rem; margin:0; color: var(--accent);">Elite Cloaker v40</h1>
+                <span id="activeProfileLabel" class="profile-badge">School</span>
             </div>
             
-            <div id="controls" style="display:none;">
-                <div class="section-title">Connection Engine <span id="statusLight"></span></div>
-                <select id="proxyEngine" onchange="toggleProxyInput()">
-                    <option value="scramjet">Scramjet (Stealth)</option>
-                    <option value="rammerhead">Rammerhead (Compatibility)</option>
-                    <option value="none">None (Direct Load)</option>
+            <div id="controls">
+                <div class="section-title">Identity Profile</div>
+                <select id="profileSelect" onchange="switchProfile(this.value)">
+                    <option value="school">📚 School Mode</option>
+                    <option value="gaming">🎮 Gaming Mode</option>
                 </select>
-                <div id="proxyInputArea">
-                    <input type="text" id="uvBase" placeholder="Base URL (e.g., https://...)">
+
+                <div class="sub-panel">
+                    <div class="section-title" style="margin-top:0;">Profile Editor</div>
+                    <input type="text" id="editKey" placeholder="Unlock Code">
+                    <input type="text" id="editTitle" placeholder="Tab Title">
+                    <input type="text" id="editIcon" placeholder="Favicon URL">
+                    <input type="text" id="editPanic" placeholder="Panic Redirect URL">
+                    <button onclick="saveProfileChanges()" style="background:#444; font-size:0.7rem;">Apply Changes</button>
                 </div>
-                
-                <div class="section-title">Panic Configuration</div>
-                <button id="panicKeyDisplay" onclick="listenForPanicKey()" style="background:#444; font-size:0.7rem;">Panic Key: Press to Set</button>
-                <input type="text" id="panicUrl" value="https://classroom.google.com" placeholder="Redirect URL">
 
-                <div class="section-title">Launch Method & Target</div>
-                <select id="launchMode">
-                    <option value="blob">Blob URL (Highly Cloaked)</option>
-                    <option value="blank">about:blank (Clean History)</option>
-                </select>
-                <input type="text" id="target" placeholder="Target Site (https://...)">
-                
-                <div class="section-title">History <span onclick="clearHistory()" style="cursor:pointer; color:var(--danger); font-size:10px;">[Wipe]</span></div>
-                <div id="historyList"></div>
+                <div class="section-title">Cloud Sync (Export/Import)</div>
+                <div class="sync-grid">
+                    <button onclick="exportData()" style="background:#607d8b; font-size:0.7rem; margin:0;">Export Data</button>
+                    <button onclick="importData()" style="background:#673ab7; font-size:0.7rem; margin:0;">Import Data</button>
+                </div>
 
-                <div class="section-title">Favorites</div>
-                <div id="favList"></div>
-                <button onclick="saveLink()" style="font-size: 0.7rem; padding: 5px 10px;">+ Save Target</button>
+                <div class="section-title">Automated Defense</div>
+                <div style="display:flex; align-items:center; gap:10px; padding: 0 10px;">
+                    <input type="checkbox" id="autoGhostToggle" checked>
+                    <label style="font-size:0.7rem; color:#888;">Auto-Ghost on blur</label>
+                </div>
 
+                <div class="section-title">Target Launch</div>
+                <input type="password" id="target" placeholder="Target URL (https://...)">
                 <button class="launch-btn" onclick="launch()">Launch Cloak</button>
-                <button onclick="toggleWiki()" style="background:#666; font-size:0.8rem;">Instant Stealth Mode</button>
                 
-                <div class="section-title">Security Settings</div>
-                <input type="password" id="newKey" placeholder="New Master Key">
-                <button onclick="updateKey()" style="font-size:0.7rem;">Update Master Key</button>
-                <button onclick="selfDestruct()" style="background:var(--danger); font-size:0.7rem; margin-top:20px;">Self-Destruct (Full Wipe)</button>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <button onclick="location.reload()" style="background:#333; font-size:0.7rem;">Lock UI</button>
+                    <button onclick="selfDestruct()" style="background:var(--danger); font-size:0.7rem;">Wipe All</button>
+                </div>
             </div>
         </div>
     </div>
@@ -98,107 +110,102 @@
     <div id="toastContainer"></div>
 
     <script>
-        const GLOBAL_RECOVERY_KEY = "SUPER-ADMIN-2026";
-        let settings = JSON.parse(localStorage.getItem('cloakerSettings')) || {};
+        const RECOVERY = "SUPER-ADMIN-2026";
+        let settings = JSON.parse(localStorage.getItem('cloakerSettings')) || {
+            activeProfile: 'school',
+            school: { key: "1234", panic: "https://classroom.google.com", title: "Calculator", icon: "https://www.google.com/favicon.ico" },
+            gaming: { key: "7777", panic: "https://www.google.com", title: "My Files", icon: "https://ssl.gstatic.com/docs/doclist/images/favicon_v2.png" }
+        };
+        let currentInput = "";
 
         function save() { localStorage.setItem('cloakerSettings', JSON.stringify(settings)); }
 
         function init() {
-            // Defaults
-            if (!settings.masterHash) settings.masterHash = btoa("password");
-            if (!settings.favs) settings.favs = [];
-            if (!settings.history) settings.history = [];
-            if (!settings.panicKey) settings.panicKey = "\\";
-            if (!settings.theme) settings.theme = "dark";
-            
-            document.body.setAttribute('data-theme', settings.theme);
-            document.getElementById('uvBase').value = settings.lastBase || "";
-            document.getElementById('panicKeyDisplay').textContent = "Panic Key: " + settings.panicKey;
-            renderFavs();
-            renderHistory();
-            toggleProxyInput();
+            switchProfile(settings.activeProfile);
+            window.onblur = () => { if(document.getElementById('autoGhostToggle').checked) document.getElementById('uiContainer').style.opacity = 0.1; };
+            window.onfocus = () => { document.getElementById('uiContainer').style.opacity = 1; };
         }
 
-        function listenForPanicKey() {
-            const btn = document.getElementById('panicKeyDisplay');
-            btn.textContent = "PRESS ANY KEY...";
-            const handler = (e) => {
-                e.preventDefault();
-                settings.panicKey = e.key;
-                btn.textContent = "Panic Key: " + e.key;
-                save();
-                window.removeEventListener('keydown', handler);
-                showToast("Panic Key Saved");
-            };
-            window.addEventListener('keydown', handler);
-        }
-
-        function verify() {
-            const input = document.getElementById('pswd').value;
-            if (btoa(input) === settings.masterHash || input === GLOBAL_RECOVERY_KEY) {
-                document.getElementById('controls').style.display = 'block';
-                document.getElementById('loginArea').style.display = 'none';
-                showToast("Access Granted");
-            } else { showToast("Denied"); }
-        }
-
-        function launch() {
-            const target = document.getElementById('target').value;
-            const proxyBase = document.getElementById('uvBase').value.replace(/\/$/, "");
-            const engine = document.getElementById('proxyEngine').value;
-            const launchMode = document.getElementById('launchMode').value;
-            const panicRedirect = document.getElementById('panicUrl').value;
-
-            if (!target.startsWith('http')) return showToast("Use https://");
-
-            settings.history = [target, ...settings.history.filter(h => h !== target)].slice(0, 5);
-            if (engine !== "none") settings.lastBase = proxyBase;
+        function switchProfile(p) {
+            settings.activeProfile = p;
+            const data = settings[p];
+            document.getElementById('activeProfileLabel').textContent = p.toUpperCase();
+            document.getElementById('tabTitle').textContent = data.title;
+            document.getElementById('tabIcon').href = data.icon;
+            document.getElementById('profileSelect').value = p;
+            document.getElementById('editKey').value = data.key;
+            document.getElementById('editTitle').value = data.title;
+            document.getElementById('editIcon').value = data.icon;
+            document.getElementById('editPanic').value = data.panic;
             save();
-            renderHistory();
+        }
 
-            let finalUrl = target;
-            if (engine === "rammerhead") finalUrl = `${proxyBase}/main/${target}`;
-            // Add Scramjet Logic here if script is available
+        function saveProfileChanges() {
+            const p = settings.activeProfile;
+            settings[p].key = document.getElementById('editKey').value;
+            settings[p].title = document.getElementById('editTitle').value;
+            settings[p].icon = document.getElementById('editIcon').value;
+            settings[p].panic = document.getElementById('editPanic').value;
+            save();
+            switchProfile(p);
+            showToast("Changes Applied");
+        }
 
-            const frameHTML = `
-                <html>
-                <head>
-                    <title>Classes</title>
-                    <link rel="icon" href="https://ssl.gstatic.com">
-                    <style>body,html{margin:0;padding:0;height:100%;overflow:hidden;background:#000;}iframe{width:100%;height:100%;border:none;}</style>
-                </head>
-                <body>
-                    <iframe src="${finalUrl}"></iframe>
-                    <script>
-                        window.addEventListener('keydown', (e) => {
-                            if (e.key === "${settings.panicKey}") window.location.replace("${panicRedirect}");
-                        });
-                    <\/script>
-                </body>
-                </html>
-            `;
+        /* --- EXPORT / IMPORT --- */
+        function exportData() {
+            const dataStr = btoa(JSON.stringify(settings));
+            navigator.clipboard.writeText(dataStr).then(() => {
+                showToast("Data Copied to Clipboard!");
+            });
+        }
 
-            const win = window.open('about:blank', '_blank');
-            if (launchMode === "blob") {
-                win.location.href = URL.createObjectURL(new Blob([frameHTML], { type: 'text/html' }));
-            } else {
-                win.document.write(frameHTML);
-                win.document.close();
+        function importData() {
+            const dataStr = prompt("Paste your exported code string here:");
+            if (dataStr) {
+                try {
+                    const decoded = JSON.parse(atob(dataStr));
+                    settings = decoded;
+                    save();
+                    location.reload();
+                } catch (e) {
+                    alert("Invalid Data String.");
+                }
             }
         }
 
-        /* UI Helpers */
-        function toggleProxyInput() { document.getElementById('proxyInputArea').style.display = (document.getElementById('proxyEngine').value === "none") ? "none" : "block"; }
-        function renderFavs() { const list = document.getElementById('favList'); list.innerHTML = settings.favs.length ? settings.favs.map(f => `<div class="list-item"><span onclick="document.getElementById('target').value='${f}'" style="cursor:pointer">${f}</span><button onclick="deleteFav('${f}')" style="width:auto;background:var(--danger)">X</button></div>`).join('') : "None"; }
-        function renderHistory() { const list = document.getElementById('historyList'); list.innerHTML = settings.history.length ? settings.history.map(h => `<div class="list-item" onclick="document.getElementById('target').value='${h}'" style="cursor:pointer; font-size:0.7rem;">${h}</div>`).join('') : "Empty"; }
-        function saveLink() { const url = document.getElementById('target').value; if (url && !settings.favs.includes(url)) { settings.favs.push(url); save(); renderFavs(); } }
-        function deleteFav(url) { settings.favs = settings.favs.filter(f => f !== url); save(); renderFavs(); }
-        function clearHistory() { settings.history = []; save(); renderHistory(); }
-        function unlock() { document.getElementById('shadow').style.display = 'none'; document.getElementById('mainUI').style.display = 'flex'; }
-        function toggleWiki() { const w = document.getElementById('wikiMode'); w.style.display = (w.style.display === 'block') ? 'none' : 'block'; }
-        function showToast(m) { const t = document.createElement('div'); t.className = 'toast'; t.textContent = m; document.getElementById('toastContainer').appendChild(t); setTimeout(() => t.remove(), 2500); }
-        function selfDestruct() { if (confirm("WIPE ALL?")) { localStorage.clear(); location.reload(); } }
-        function updateKey() { const k = document.getElementById('newKey').value; if (k.length > 3) { settings.masterHash = btoa(k); save(); showToast("Key Saved"); } }
+        /* --- CALC --- */
+        function press(val) { currentInput += val; document.getElementById('display').value = currentInput; }
+        function clearCalc() { currentInput = ""; document.getElementById('display').value = "0"; }
+        function calculate() {
+            const currentKey = settings[settings.activeProfile].key;
+            if (currentInput === currentKey || currentInput === RECOVERY) {
+                document.getElementById('calc').style.display = 'none';
+                document.getElementById('mainUI').style.display = 'flex';
+                return;
+            }
+            try { currentInput = eval(currentInput).toString(); document.getElementById('display').value = currentInput; }
+            catch { document.getElementById('display').value = "Error"; currentInput = ""; }
+        }
+
+        /* --- CLOAKER --- */
+        function launch() {
+            const target = document.getElementById('target').value;
+            const pData = settings[settings.activeProfile];
+            if (!target.startsWith('http')) return showToast("Use https://");
+            const frameHTML = `<html><head><title>${pData.title}</title><link rel="icon" href="${pData.icon}"><style>body,html{margin:0;padding:0;height:100%;overflow:hidden;background:#000;}iframe{width:100%;height:100%;border:none;}</style></head><body><iframe src="${target}"></iframe><script>window.onkeydown=(e)=>{if(e.key==="\\\\")window.location.replace("${pData.panic}");};<\/script></body></html>`;
+            const win = window.open('about:blank', '_blank');
+            if (win) { win.document.write(frameHTML); win.document.close(); }
+        }
+
+        function showToast(m) {
+            const t = document.createElement('div');
+            t.className = 'toast';
+            t.textContent = m;
+            document.getElementById('toastContainer').appendChild(t);
+            setTimeout(() => t.remove(), 2500);
+        }
+
+        function selfDestruct() { if(confirm("Wipe all data?")) { localStorage.clear(); location.reload(); } }
     </script>
 </body>
 </html>
