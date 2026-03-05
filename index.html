@@ -96,14 +96,49 @@
             panicKey: "\\"
         };
 
-        let settings = JSON.parse(localStorage.getItem('cloakerSettings')) || defaults;
+        let settings = {};
+
+        function deepMerge(base, override) {
+            const out = Array.isArray(base) ? [] : {};
+            for (const k in base) {
+                if (Object.prototype.hasOwnProperty.call(base, k)) {
+                    if (override && Object.prototype.hasOwnProperty.call(override, k)) {
+                        if (typeof base[k] === 'object' && base[k] !== null && !Array.isArray(base[k])) {
+                            out[k] = deepMerge(base[k], override[k]);
+                        } else {
+                            out[k] = override[k];
+                        }
+                    } else {
+                        out[k] = base[k];
+                    }
+                }
+            }
+            if (override) {
+                for (const k in override) {
+                    if (!Object.prototype.hasOwnProperty.call(out, k)) out[k] = override[k];
+                }
+            }
+            return out;
+        }
+
+        function loadSettings() {
+            try {
+                const raw = localStorage.getItem('cloakerSettings');
+                const parsed = raw ? JSON.parse(raw) : {};
+                settings = deepMerge(defaults, parsed);
+            } catch (e) {
+                settings = JSON.parse(JSON.stringify(defaults));
+                console.error('Failed to load settings, using defaults', e);
+            }
+        }
 
         function save() { localStorage.setItem('cloakerSettings', JSON.stringify(settings)); }
 
         function init() {
+            loadSettings();
             switchProfile(settings.activeProfile || 'school');
-            window.onblur = () => { document.getElementById('uiContainer').style.opacity = 0.1; };
-            window.onfocus = () => { document.getElementById('uiContainer').style.opacity = 1; };
+            window.addEventListener('blur', () => { document.getElementById('uiContainer').style.opacity = 0.1; });
+            window.addEventListener('focus', () => { document.getElementById('uiContainer').style.opacity = 1; });
         }
 
         function showLogin() { document.getElementById('shadow').style.display='none'; document.getElementById('mainUI').style.display='flex'; }
@@ -114,62 +149,117 @@
             if (input === currentKey || input === RECOVERY) {
                 document.getElementById('loginArea').style.display = 'none';
                 document.getElementById('dashboard').style.display = 'block';
-            } else { showToast("Denied"); }
+            } else { showToast('Denied'); }
         }
 
         function switchProfile(p) {
             settings.activeProfile = p;
-            const data = settings[p] || defaults[p];
-            document.getElementById('tabTitle').textContent = data.title;
-            document.getElementById('editTitle').value = data.title;
-            document.getElementById('editPanic').value = data.panic;
-            document.getElementById('pkDisp').textContent = "Panic Key: " + (settings.panicKey || "\\");
+            if (!settings[p]) settings[p] = JSON.parse(JSON.stringify(defaults[p] || {}));
+            const data = settings[p];
+            document.getElementById('tabTitle').textContent = data.title || '';
+            document.getElementById('editTitle').value = data.title || '';
+            document.getElementById('editPanic').value = data.panic || '';
+            document.getElementById('pkDisp').textContent = 'Panic Key: ' + (settings.panicKey || '\\');
             save();
         }
 
         function saveProfileChanges() {
             const p = settings.activeProfile;
+            if (!settings[p]) settings[p] = {};
             settings[p].title = document.getElementById('editTitle').value;
             settings[p].panic = document.getElementById('editPanic').value;
             save();
             switchProfile(p);
-            showToast("Saved");
+            showToast('Saved');
         }
 
+        let _panicKeyHandler = null;
         function setPanicKey() {
             const btn = document.getElementById('pkDisp');
-            btn.textContent = "Press any key...";
-            window.onkeydown = (e) => {
+            btn.textContent = 'Press any key...';
+            if (_panicKeyHandler) window.removeEventListener('keydown', _panicKeyHandler);
+            _panicKeyHandler = (e) => {
                 settings.panicKey = e.key;
-                btn.textContent = "Panic Key: " + e.key;
+                btn.textContent = 'Panic Key: ' + e.key;
                 save();
-                window.onkeydown = null;
+                window.removeEventListener('keydown', _panicKeyHandler);
+                _panicKeyHandler = null;
             };
+            window.addEventListener('keydown', _panicKeyHandler);
         }
 
         function clogHistory() {
-            const safe = ["https://google.com","https://wikipedia.org","https://khanacademy.org"];
+            const safe = ['https://google.com','https://wikipedia.org','https://khanacademy.org'];
             safe.forEach((s, i) => { setTimeout(() => { const w = window.open(s, '_blank'); if(w) w.blur(); window.focus(); }, i * 400); });
         }
 
-        function launch() {
-            const target = document.getElementById('target').value;
-            const engine = document.getElementById('proxyEngine').value;
-            const base = document.getElementById('uvBase').value.replace(/\/$/, "");
-            const pData = settings[settings.activeProfile] || defaults.school;
-            
-            if (!target.startsWith('http')) return showToast("Use https://");
-            let final = (engine === "rammerhead") ? `${base}/main/${target}` : target;
+        function isValidUrl(u) {
+            try { new URL(u); return true; } catch (_) { return false; }
+        }
 
-            const frameHTML = `<html><head><title>${pData.title}</title><style>body,html{margin:0;padding:0;height:100%;overflow:hidden;background:#000;}iframe{width:100%;height:100%;border:none;}</style></head><body><iframe src="${final}"></iframe><script>window.onkeydown=(e)=>{if(e.key==="${settings.panicKey}")window.location.replace("${pData.panic}");};<\/script></body></html>`;
-            const win = window.open('about:blank', '_blank');
-            if (win) { win.document.write(frameHTML); win.document.close(); }
+        function launch() {
+            const target = document.getElementById('target').value.trim();
+            const engine = document.getElementById('proxyEngine').value;
+            const baseInput = document.getElementById('uvBase').value.trim().replace(/\/$/, '');
+            const pData = settings[settings.activeProfile] || defaults.school;
+
+            if (!target) return showToast('Enter a target URL');
+            if (!isValidUrl(target)) return showToast('Invalid target URL');
+
+            if (engine === 'rammerhead') {
+                if (!baseInput) return showToast('Enter proxy base URL');
+                if (!isValidUrl(baseInput)) return showToast('Invalid proxy base URL');
+            }
+
+            const final = (engine === 'rammerhead') ? `${baseInput}/main/${encodeURIComponent(target)}` : target;
+
+            const safeTitle = pData.title || '';
+            const safePanic = pData.panic || '';
+            const safePanicKey = settings.panicKey || '\\';
+
+            const frameHTML = `<!doctype html><html><head><meta charset="utf-8"><title>${escapeHtml(safeTitle)}</title><style>body,html{margin:0;padding:0;height:100%;overflow:hidden;background:#000;}iframe{width:100%;height:100%;border:none;}</style></head><body><iframe src="${escapeAttr(final)}"></iframe><script>const _PANIC=${JSON.stringify(safePanic)};const _PANICK=${JSON.stringify(safePanicKey)};window.addEventListener('keydown',function(e){if(e.key===_PANICK)location.replace(_PANIC);});</script></body></html>`;
+
+            try {
+                const blob = new Blob([frameHTML], { type: 'text/html' });
+                const url = URL.createObjectURL(blob);
+                const win = window.open(url, '_blank');
+                if (win) win.focus();
+                setTimeout(() => URL.revokeObjectURL(url), 5000);
+            } catch (e) {
+                showToast('Failed to open target');
+                console.error(e);
+            }
         }
 
         function toggleProxy() { document.getElementById('pInput').style.display = (document.getElementById('proxyEngine').value === 'none') ? 'none' : 'block'; }
-        function exportData() { navigator.clipboard.writeText(btoa(JSON.stringify(settings))).then(() => showToast("Copied!")); }
-        function importData() { const d = prompt("Paste string:"); if(d) { settings = JSON.parse(atob(d)); save(); location.reload(); } }
+
+        function exportData() {
+            const enc = btoa(JSON.stringify(settings));
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(enc).then(() => showToast('Copied!')).catch(() => { prompt('Copy this string manually:', enc); });
+            } else {
+                prompt('Copy this string:', enc);
+            }
+        }
+
+        function importData() {
+            const d = prompt('Paste string:');
+            if (!d) return;
+            try {
+                const parsed = JSON.parse(atob(d));
+                settings = deepMerge(defaults, parsed);
+                save();
+                location.reload();
+            } catch (e) {
+                showToast('Import failed');
+                console.error('Import error', e);
+            }
+        }
+
         function showToast(m) { const t = document.createElement('div'); t.className='toast'; t.textContent=m; document.getElementById('toastContainer').appendChild(t); setTimeout(()=>t.remove(),2000); }
+
+        function escapeHtml(s) { return String(s).replace(/[&<>\"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c] || c; }); }
+        function escapeAttr(s) { return String(s).replace(/"/g,'&quot;'); }
     </script>
 </body>
 </html>
