@@ -40,6 +40,8 @@
         .frameWrap { width: 98%; height: 94%; background: #000; position: relative; }
         .closeBtn { position: absolute; top: 5px; right: 5px; background: var(--danger); color: #fff; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; }
         .toast { position: fixed; bottom: 20px; right: 20px; background: #333; color: #fff; padding: 10px 20px; border-radius: 6px; font-size: 0.8rem; z-index: 3000; border: 1px solid var(--accent); }
+        .bm-btn { padding: 6px; font-size: 0.65rem; background: var(--accent); border-radius: 4px; cursor: pointer; position: relative; }
+        .bm-del { position: absolute; top: -4px; right: -4px; background: var(--danger); width: 14px; height: 14px; border-radius: 50%; font-size: 0.5rem; display: flex; align-items: center; justify-content: center; }
     </style>
 </head>
 <body onload="init()">
@@ -96,7 +98,10 @@
                 <button id="protectBtn" onclick="toggleProtect()" style="background:#795548; font-size:0.7rem;">Encryption Panel</button>
                 <button id="pkDisp" onclick="setPanicKey()" style="background:#444; font-size:0.7rem;">Panic Key</button>
 
-                <div class="section-title">Activity</div>
+                <div class="section-title">
+                    <span>Activity</span>
+                    <span id="sessionTimer" style="font-size: 0.6rem; color: var(--accent);"></span>
+                </div>
                 <div id="logList"></div>
                 <button onclick="clearLog()" style="background:var(--danger); font-size:0.6rem;">Wipe Logs</button>
 
@@ -106,7 +111,23 @@
                     <input type="checkbox" id="sandboxChk" style="width:auto;">
                     <label style="font-size:0.75rem;">Launch in Sandbox</label>
                 </div>
+                <div style="display:flex; align-items:center; gap:8px; margin:5px 0;">
+                    <input type="checkbox" id="autoMuteChk" style="width:auto;">
+                    <label style="font-size:0.75rem;">Auto-Mute Tab</label>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px; margin:5px 0;">
+                    <input type="checkbox" id="stealthModeChk" style="width:auto;">
+                    <label style="font-size:0.75rem;">Stealth Mode</label>
+                </div>
                 <button class="launch-btn" onclick="launch()">Execute Cloak</button>
+
+                <div class="section-title">Quick Launch</div>
+                <div id="bookmarksList" style="display:grid; grid-template-columns: 1fr 1fr; gap:5px; margin-top:5px;"></div>
+                <div style="display:flex; gap:5px; margin-top:8px;">
+                    <input id="bmName" placeholder="Name" style="width:40%; padding:6px; margin:0;">
+                    <input id="bmUrl" placeholder="URL" style="width:40%; padding:6px; margin:0;">
+                    <button onclick="addBookmark()" style="width:20%; padding:6px; margin:0; font-size:0.65rem;">Add</button>
+                </div>
                 
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px;">
                     <button onclick="exportData()" style="background:#607d8b; font-size:0.7rem;">Export</button>
@@ -139,9 +160,9 @@
 
         const defaults = {
             activeProfile: 'school',
-            school: { key: "1234", panic: "https://google.com", title: "404 Not Found" },
-            gaming: { key: "7777", panic: "https://bing.com", title: "My Drive" },
-            panicKey: "\\", logs: [], theme: 'light', keysProtected: false, idleTimeout: 120000
+            school: { key: "1234", panic: "https://google.com", title: "404 Not Found", favicon: "https://ssl.gstatic.com/favicon.ico" },
+            gaming: { key: "7777", panic: "https://bing.com", title: "My Drive", favicon: "https://ssl.gstatic.com/favicon.ico" },
+            panicKey: "\\", logs: [], theme: 'light', keysProtected: false, idleTimeout: 120000, bookmarks: [], sessionStart: null
         };
 
         let settings = {};
@@ -183,10 +204,14 @@
         // --- Core Logic ---
         function init() {
             loadSettings();
+            if (!settings.bookmarks) settings.bookmarks = [];
+            if (!settings.sessionStart) settings.sessionStart = Date.now();
             document.body.setAttribute('data-theme', settings.theme || 'light');
             updateProfileSelect();
             renderLogs();
-            
+            renderBookmarks();
+            startSessionTimer();
+
             window.addEventListener('keydown', (e) => {
                 inputSeq += e.key.toLowerCase();
                 if (inputSeq.endsWith(STEALTH_SEQ)) {
@@ -194,7 +219,6 @@
                     document.getElementById('mainUI').style.display = 'flex';
                     inputSeq = "";
                 }
-                // Global Panic / Emergency Audio Kill
                 if (e.key === settings.panicKey || (e.ctrlKey && e.shiftKey && e.key === 'X')) {
                     const frame = document.getElementById('sandboxFrame');
                     if (frame) frame.src = 'about:blank';
@@ -204,6 +228,13 @@
             });
             ['mousemove', 'mousedown', 'scroll'].forEach(v => window.addEventListener(v, resetIdleTimer));
             startIdleTimer();
+
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'hidden' && settings.stealthOnBlur) {
+                    document.title = settings[settings.activeProfile].title;
+                    document.getElementById('tabIcon').href = settings[settings.activeProfile].favicon;
+                }
+            });
         }
 
         function verify() {
@@ -224,12 +255,26 @@
             if (!target) return;
             settings.logs = [{ time: new Date().toLocaleTimeString(), target }, ...(settings.logs || [])].slice(0, 10);
             save(); renderLogs();
+
+            const autoMute = document.getElementById('autoMuteChk').checked;
+            const stealth = document.getElementById('stealthModeChk').checked;
+            const profile = settings[settings.activeProfile];
+
             if (document.getElementById('sandboxChk').checked) {
                 document.getElementById('sandboxFrame').src = target;
                 document.getElementById('sandboxModal').style.display = 'flex';
             } else {
                 const win = window.open('about:blank', '_blank');
-                win.document.write(`<html><head><title>${settings[settings.activeProfile].title}</title></head><body style="margin:0;overflow:hidden;"><iframe src="${target}" style="width:100%;height:100%;border:none;"></iframe></body></html>`);
+                const muteScript = autoMute ? `<script>document.querySelectorAll('video, audio').forEach(v => v.muted = true);</script>` : '';
+                const stealthScript = stealth ? `<script>
+                    setInterval(() => {
+                        if (document.hidden) {
+                            document.title = '${profile.title}';
+                            document.querySelector('link[rel="icon"]').href = '${profile.favicon}';
+                        }
+                    }, 100);
+                </script>` : '';
+                win.document.write(`<html><head><title>${profile.title}</title><link rel="icon" href="${profile.favicon}">${stealthScript}</head><body style="margin:0;overflow:hidden;"><iframe src="${target}" style="width:100%;height:100%;border:none;"></iframe>${muteScript}</body></html>`);
             }
         }
 
@@ -250,9 +295,49 @@
         function addProfile() {
             const name = document.getElementById('newProfileName').value.trim();
             if (!name) return;
-            settings[name] = { key: "1234", panic: "https://google.com", title: name };
+            settings[name] = { key: "1234", panic: "https://google.com", title: name, favicon: "https://ssl.gstatic.com/favicon.ico" };
             save(); updateProfileSelect();
         }
+
+        function addBookmark() {
+            const name = document.getElementById('bmName').value.trim();
+            const url = document.getElementById('bmUrl').value.trim();
+            if (!name || !url) return;
+            settings.bookmarks.push({ name, url });
+            save(); renderBookmarks();
+            document.getElementById('bmName').value = '';
+            document.getElementById('bmUrl').value = '';
+        }
+
+        function renderBookmarks() {
+            const list = document.getElementById('bookmarksList');
+            list.innerHTML = settings.bookmarks.map((bm, i) =>
+                `<button class="bm-btn" onclick="document.getElementById('target').value='${bm.url}';launch()">
+                    ${bm.name}
+                    <span class="bm-del" onclick="event.stopPropagation();removeBookmark(${i})">×</span>
+                </button>`
+            ).join('');
+        }
+
+        function removeBookmark(i) {
+            settings.bookmarks.splice(i, 1);
+            save(); renderBookmarks();
+        }
+
+        function startSessionTimer() {
+            setInterval(() => {
+                const elapsed = Date.now() - settings.sessionStart;
+                const mins = Math.floor(elapsed / 60000);
+                const secs = Math.floor((elapsed % 60000) / 1000);
+                document.getElementById('sessionTimer').textContent = `${mins}m ${secs}s`;
+            }, 1000);
+        }
+
+        function clearLog() {
+            settings.logs = [];
+            save(); renderLogs();
+        }
+
         function renderLogs() { document.getElementById('logList').innerHTML = (settings.logs || []).map(l => `<div>[${l.time}] ${l.target}</div>`).join('') || 'No history'; }
         function showToast(m) { const t = document.createElement('div'); t.className='toast'; t.textContent=m; document.getElementById('toastContainer').appendChild(t); setTimeout(()=>t.remove(),2000); }
         function closeSandbox() { document.getElementById('sandboxModal').style.display = 'none'; document.getElementById('sandboxFrame').src = 'about:blank'; }
