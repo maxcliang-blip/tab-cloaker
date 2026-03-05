@@ -6,11 +6,11 @@
     <title id="tabTitle">404 Not Found</title>
     <link id="tabIcon" rel="icon" type="image/png" href="https://ssl.gstatic.com/favicon.ico">
     
-    <style id="baseStyles">
+    <style>
         :root {
             --bg-main: #fff; --text-main: #000; --panel-bg: #f4f4f4; --panel-border: #ddd;
             --accent: #1a73e8; --accent-2: #34a853; --input-bg: #fff; --input-border: #ccc;
-            --input-text: #000; --danger: #d93025;
+            --input-text: #000; --danger: #d93025; --success: #2e7d32;
         }
         body[data-theme="dark"] {
             --bg-main: #111; --text-main: #eee; --panel-bg: #222; --panel-border: #444;
@@ -18,31 +18,37 @@
         }
         body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg-main); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; overflow: hidden; transition: 0.3s; }
         
-        #shadow { text-align: center; user-select: none; }
+        #shadow { text-align: center; user-select: none; transition: opacity 0.5s; }
         #error404 { font-size: 5rem; margin: 0; font-weight: 300; }
 
         #decoyUI { display:none; width: 100%; height: 100vh; background: #f9f9f9; color: #333; padding: 40px; box-sizing: border-box; position: absolute; top: 0; left: 0; z-index: 500; }
         .decoy-card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 10px;}
 
-        #mainUI { display: none; width: 100%; flex-direction: column; justify-content: center; align-items: center; position: absolute; z-index: 100; }
-        .container { background: var(--panel-bg); padding: 25px; border-radius: 12px; border: 1px solid var(--panel-border); width: 420px; box-shadow: 0 15px 40px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto; }
-        
-        input, select, textarea { width: 92%; padding: 10px; margin: 8px auto; border-radius: 6px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--input-text); font-family: monospace; display: block; outline: none; }
-        button { padding: 12px; cursor: pointer; background: var(--accent); color: white; border: none; border-radius: 6px; width: 100%; font-weight: 600; margin-top: 10px; }
-        
+        #mainUI { display: none; width: 100%; flex-direction: column; justify-content: center; align-items: center; position: absolute; z-index: 100; opacity: 0; transition: opacity 0.5s; }
+        .container { background: var(--panel-bg); padding: 25px; border-radius: 12px; border: 1px solid var(--panel-border); width: 420px; box-shadow: 0 15px 40px rgba(0,0,0,0.3); max-height: 90vh; overflow-y: auto; }
+        input, select { width: 92%; padding: 10px; margin: 8px auto; border-radius: 6px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--input-text); font-family: monospace; display: block; outline: none; transition: border 0.2s; }
+        input:focus { border-color: var(--accent); }
+        button { padding: 12px; cursor: pointer; background: var(--accent); color: white; border: none; border-radius: 6px; width: 100%; font-weight: 600; margin-top: 10px; transition: transform 0.1s, opacity 0.2s; }
+        button:active { transform: scale(0.98); }
+        button:hover { opacity: 0.9; }
         .launch-btn { background: var(--accent-2); font-size: 1.1rem; }
-        .section-title { margin-top: 15px; font-size: 0.7rem; color: #888; text-transform: uppercase; letter-spacing: 1px; padding: 0 10px; display: flex; justify-content: space-between; align-items: center; }
+        .section-title { margin-top: 15px; font-size: 0.7rem; color: #888; text-transform: uppercase; letter-spacing: 1px; padding: 0 10px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--panel-border); padding-bottom: 5px; margin-bottom: 10px; }
+        #logList { max-height: 80px; overflow-y: auto; font-size: 0.7rem; font-family: monospace; background: #000; color: #0f0; padding: 8px; border-radius: 4px; margin-top: 5px; border: 1px solid #333; }
         
-        #logList { max-height: 80px; overflow-y: auto; font-size: 0.7rem; font-family: monospace; background: #000; color: #0f0; padding: 5px; border-radius: 4px; margin-top: 5px; }
         #sandboxModal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: none; align-items: center; justify-content: center; z-index: 2000; }
-        .frameWrap { width: 98%; height: 94%; background: #000; position: relative; }
-        .closeBtn { position: absolute; top: 5px; right: 5px; background: var(--danger); color: #fff; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; }
+        .frameWrap { width: 98%; height: 94%; background: #000; position: relative; border-radius: 8px; overflow: hidden; }
+        .closeBtn { position: absolute; top: 10px; right: 10px; background: var(--danger); color: #fff; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; z-index: 2100; font-weight: bold; }
+        .toast { position: fixed; bottom: 20px; right: 20px; background: #333; color: #fff; padding: 12px 24px; border-radius: 8px; font-size: 0.9rem; z-index: 3000; border: 1px solid var(--accent); box-shadow: 0 5px 15px rgba(0,0,0,0.3); animation: slideIn 0.3s ease-out; }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        .bm-btn { padding: 8px; font-size: 0.7rem; background: var(--accent); color: white; border-radius: 4px; border: none; cursor: pointer; position: relative; text-align: left; overflow: hidden; display: flex; align-items: center; justify-content: space-between; }
+        .bm-del { background: rgba(0,0,0,0.2); width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; border-radius: 3px; font-size: 10px; }
+        .bm-del:hover { background: var(--danger); }
         
-        .toast { position: fixed; bottom: 20px; right: 20px; background: #333; color: #fff; padding: 10px 20px; border-radius: 6px; font-size: 0.8rem; z-index: 3000; border: 1px solid var(--accent); }
-        .bm-btn { padding: 8px; font-size: 0.7rem; background: var(--accent); color: white; border-radius: 4px; border: none; cursor: pointer; position: relative; text-align: left; overflow: hidden; }
-        .bm-del { position: absolute; top: 0; right: 0; background: rgba(0,0,0,0.3); width: 20px; height: 100%; display: flex; align-items: center; justify-content: center; }
+        /* New Styles for Tab Disguise Presets */
+        .disguise-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-top: 5px; }
+        .disguise-btn { padding: 5px; font-size: 0.6rem; background: #444; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .disguise-btn.active { background: var(--accent); }
     </style>
-    <style id="dynamicStyles"></style>
 </head>
 <body onload="init()">
 
@@ -74,7 +80,7 @@
     </div>
 
     <div id="mainUI">
-        <div class="container" id="uiContainer">
+        <div class="container">
             <div id="loginArea">
                 <h2 style="margin:0; font-size:1.1rem;">System Restricted</h2>
                 <input type="password" id="pswd" placeholder="Enter Key...">
@@ -83,7 +89,7 @@
 
             <div id="dashboard" style="display:none;">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <span style="font-size: 0.8rem; color: var(--accent);">v50 Ghost Protocol</span>
+                    <span style="font-size: 0.8rem; color: var(--accent);">v49 Ghost Protocol</span>
                     <button onclick="toggleTheme()" style="width:auto; margin:0; padding:4px 8px; font-size:0.6rem;">Toggle Dark</button>
                 </div>
 
@@ -94,11 +100,25 @@
                     <button onclick="addProfile()" style="background:#4caf50; padding:6px 10px; width:auto; margin:0;">Add</button>
                 </div>
 
-                <div class="section-title">Security & Visuals</div>
-                <button onclick="toggleProtect()" style="background:#795548; font-size:0.7rem;">Encryption Panel</button>
-                <button id="pkDisp" onclick="setPanicKey()" style="background:#444; font-size:0.7rem;">Panic Key</button>
-                <textarea id="customCSS" placeholder="/* Custom CSS Skin */" style="height: 40px; font-size: 0.65rem;"></textarea>
-                <button onclick="applyCSS()" style="background:#673ab7; font-size:0.7rem; margin-top:0;">Apply Skin</button>
+                <div class="section-title">Security</div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px;">
+                    <button onclick="toggleProtect()" style="background:#795548; font-size:0.7rem; margin:0;">Encryption Panel</button>
+                    <button id="pkDisp" onclick="setPanicKey()" style="background:#444; font-size:0.7rem; margin:0;">Panic Key</button>
+                </div>
+                
+                <div class="section-title">Tab Disguise</div>
+                <div class="disguise-grid">
+                    <button class="disguise-btn" onclick="setDisguise('google')">Google</button>
+                    <button class="disguise-btn" onclick="setDisguise('drive')">Drive</button>
+                    <button class="disguise-btn" onclick="setDisguise('classroom')">Classroom</button>
+                    <button class="disguise-btn" onclick="setDisguise('calc')">Calculator</button>
+                    <button class="disguise-btn" onclick="setDisguise('404')">404 Error</button>
+                    <button class="disguise-btn" onclick="setDisguise('custom')">Custom</button>
+                </div>
+                <div id="customDisguise" style="display:none; margin-top:5px;">
+                    <input id="customTitle" placeholder="Tab Title" style="font-size:0.7rem; padding:5px;">
+                    <input id="customIcon" placeholder="Favicon URL" style="font-size:0.7rem; padding:5px;">
+                </div>
 
                 <div class="section-title">
                     <span>Activity</span>
@@ -157,11 +177,10 @@
             activeProfile: 'school',
             school: { key: "1234", panic: "https://google.com", title: "404 Not Found", favicon: "https://ssl.gstatic.com/favicon.ico" },
             gaming: { key: "7777", panic: "https://bing.com", title: "My Drive", favicon: "https://ssl.gstatic.com/favicon.ico" },
-            panicKey: "\\", logs: [], theme: 'light', keysProtected: false, idleTimeout: 120000, bookmarks: [], sessionStart: null, stealthOnBlur: true, customCSS: ""
+            panicKey: "\\", logs: [], theme: 'light', keysProtected: false, idleTimeout: 120000, bookmarks: [], sessionStart: null, stealthOnBlur: true
         };
 
         let settings = {};
-
         function save() { localStorage.setItem('cloakerSettings', JSON.stringify(settings)); }
         function loadSettings() {
             const raw = localStorage.getItem('cloakerSettings');
@@ -169,23 +188,69 @@
             if (!settings.sessionStart) settings.sessionStart = Date.now();
         }
 
+        async function deriveKey(pass, salt) {
+            const enc = new TextEncoder();
+            const km = await crypto.subtle.importKey('raw', enc.encode(pass), 'PBKDF2', false, ['deriveKey']);
+            return crypto.subtle.deriveKey({ name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' }, km, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+        }
+
+        const presets = {
+            google: { title: "Google", icon: "https://www.google.com/favicon.ico" },
+            drive: { title: "My Drive - Google Drive", icon: "https://ssl.gstatic.com/docs/doclist/images/drive_2022q3_32dp.png" },
+            classroom: { title: "Google Classroom", icon: "https://ssl.gstatic.com/classroom/favicon.png" },
+            calc: { title: "Calculator", icon: "https://www.google.com/favicon.ico" },
+            "404": { title: "404 Not Found", icon: "https://ssl.gstatic.com/favicon.ico" }
+        };
+
+        function setDisguise(type) {
+            const prof = settings[settings.activeProfile];
+            if (type === 'custom') {
+                const area = document.getElementById('customDisguise');
+                area.style.display = area.style.display === 'none' ? 'block' : 'none';
+                if (area.style.display === 'block') {
+                    document.getElementById('customTitle').value = prof.title;
+                    document.getElementById('customIcon').value = prof.favicon;
+                    document.getElementById('customTitle').oninput = (e) => { prof.title = e.target.value; save(); updateTab(); };
+                    document.getElementById('customIcon').oninput = (e) => { prof.favicon = e.target.value; save(); updateTab(); };
+                }
+                return;
+            }
+            document.getElementById('customDisguise').style.display = 'none';
+            prof.title = presets[type].title;
+            prof.favicon = presets[type].icon;
+            save();
+            updateTab();
+            showToast(`Disguise set to ${type}`);
+        }
+
+        function updateTab() {
+            const prof = settings[settings.activeProfile] || defaults.school;
+            document.title = prof.title;
+            document.getElementById('tabIcon').href = prof.favicon;
+            const shadowTitle = document.getElementById('tabTitle');
+            if (shadowTitle) shadowTitle.textContent = prof.title;
+        }
+
         function init() {
             loadSettings();
             document.body.setAttribute('data-theme', settings.theme || 'light');
-            if (settings.customCSS) {
-                document.getElementById('dynamicStyles').innerHTML = settings.customCSS;
-                document.getElementById('customCSS').value = settings.customCSS;
-            }
             updateProfileSelect();
             renderLogs();
             renderBookmarks();
             startSessionTimer();
+            updateTab();
 
             window.addEventListener('keydown', (e) => {
                 inputSeq += e.key.toLowerCase();
                 if (inputSeq.endsWith(STEALTH_SEQ)) {
-                    document.getElementById('shadow').style.display = 'none';
-                    document.getElementById('mainUI').style.display = 'flex';
+                    const shadow = document.getElementById('shadow');
+                    const main = document.getElementById('mainUI');
+                    shadow.style.opacity = '0';
+                    setTimeout(() => {
+                        shadow.style.display = 'none';
+                        main.style.display = 'flex';
+                        setTimeout(() => main.style.opacity = '1', 50);
+                    }, 500);
                     inputSeq = "";
                 }
                 if (e.key === settings.panicKey || (e.ctrlKey && e.shiftKey && e.key === 'X')) {
@@ -193,15 +258,14 @@
                 }
                 resetIdleTimer();
             });
+            ['mousemove', 'mousedown', 'scroll'].forEach(v => window.addEventListener(v, resetIdleTimer));
+            startIdleTimer();
 
             document.addEventListener('visibilitychange', () => {
                 if (document.visibilityState === 'hidden' && settings.stealthOnBlur) {
-                    const prof = settings[settings.activeProfile] || defaults.school;
-                    document.title = prof.title;
-                    document.getElementById('tabIcon').href = prof.favicon;
+                    updateTab();
                 }
             });
-            startIdleTimer();
         }
 
         function verify() {
@@ -217,14 +281,6 @@
             } else showToast('Invalid Key');
         }
 
-        function applyCSS() {
-            const css = document.getElementById('customCSS').value;
-            settings.customCSS = css;
-            document.getElementById('dynamicStyles').innerHTML = css;
-            save();
-            showToast('Styles Applied');
-        }
-
         function launch() {
             const target = document.getElementById('target').value.trim();
             if (!target) return;
@@ -232,12 +288,14 @@
             save(); renderLogs();
 
             const autoMute = document.getElementById('autoMuteChk').checked;
+            const stealth = document.getElementById('stealthModeChk').checked;
             const profile = settings[settings.activeProfile] || defaults.school;
 
             if (document.getElementById('sandboxChk').checked) {
                 const frame = document.getElementById('sandboxFrame');
                 frame.src = target;
                 document.getElementById('sandboxModal').style.display = 'flex';
+                if(autoMute) frame.onload = () => { frame.contentWindow.postMessage('mute', '*'); };
             } else {
                 const win = window.open('about:blank', '_blank');
                 const muteAttr = autoMute ? 'muted' : '';
@@ -249,7 +307,12 @@
             }
         }
 
-        function startIdleTimer() { idleTimer = setTimeout(() => { if(document.getElementById('dashboard').style.display==='block') location.reload(); }, settings.idleTimeout || 120000); }
+        function startIdleTimer() { 
+            idleTimer = setTimeout(() => { 
+                if(document.getElementById('dashboard').style.display==='block') location.reload(); 
+            }, settings.idleTimeout || 120000); 
+        }
+
         function resetIdleTimer() { clearTimeout(idleTimer); startIdleTimer(); }
 
         function updateProfileSelect() {
@@ -263,7 +326,7 @@
             });
         }
 
-        function switchProfile(v) { settings.activeProfile = v; save(); showToast('Switched to ' + v); }
+        function switchProfile(v) { settings.activeProfile = v; save(); showToast('Profile: ' + v); }
         function addProfile() {
             const name = document.getElementById('newProfileName').value.trim();
             if (!name || settings[name]) return;
@@ -277,7 +340,6 @@
             if (!name || !url) return;
             settings.bookmarks.push({ name, url });
             save(); renderBookmarks();
-            document.getElementById('bmName').value = ''; document.getElementById('bmUrl').value = '';
         }
 
         function renderBookmarks() {
@@ -312,9 +374,6 @@
             const btn = document.getElementById('pkDisp'); btn.textContent = 'Press a key...'; 
             window.onkeydown = (e) => { settings.panicKey = e.key; btn.textContent = 'Panic: ' + e.key; save(); window.onkeydown = null; init(); }; 
         }
-        
-        // Placeholder for Encryption logic (AES)
-        async function toggleProtect() { showToast('Encryption Panel Active'); }
     </script>
 </body>
 </html>
