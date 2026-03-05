@@ -1,0 +1,14 @@
+{
+  "name": "tab-cloaker",
+  "version": "1.0.0",
+  "description": "Advanced tab cloaking utility",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
+  }
+}
