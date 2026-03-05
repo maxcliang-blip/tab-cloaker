@@ -106,6 +106,12 @@
                     <button id="pkDisp" onclick="setPanicKey()" style="background:#444; font-size:0.7rem; margin:0;">Panic Key</button>
                 </div>
                 
+                <div class="section-title">Advanced Stealth</div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px;">
+                    <button onclick="toggleClickJack()" id="cjBtn" style="background:#673ab7; font-size:0.7rem; margin:0;">Clickjack: OFF</button>
+                    <button onclick="toggleAutoLock()" id="alBtn" style="background:#ff9800; font-size:0.7rem; margin:0;">Auto-Lock: ON</button>
+                </div>
+
                 <div class="section-title">Tab Disguise</div>
                 <div class="disguise-grid">
                     <button class="disguise-btn" onclick="setDisguise('google')">Google</button>
@@ -177,7 +183,7 @@
             activeProfile: 'school',
             school: { key: "1234", panic: "https://google.com", title: "404 Not Found", favicon: "https://ssl.gstatic.com/favicon.ico" },
             gaming: { key: "7777", panic: "https://bing.com", title: "My Drive", favicon: "https://ssl.gstatic.com/favicon.ico" },
-            panicKey: "\\", logs: [], theme: 'light', keysProtected: false, idleTimeout: 120000, bookmarks: [], sessionStart: null, stealthOnBlur: true
+            panicKey: "\\", logs: [], theme: 'light', keysProtected: false, idleTimeout: 120000, bookmarks: [], sessionStart: null, stealthOnBlur: true, clickJack: false, autoLock: true
         };
 
         let settings = {};
@@ -231,6 +237,32 @@
             if (shadowTitle) shadowTitle.textContent = prof.title;
         }
 
+        function toggleClickJack() {
+            settings.clickJack = !settings.clickJack;
+            save();
+            updateAdvancedUI();
+            if (settings.clickJack) {
+                window.onbeforeunload = () => "Are you sure you want to leave?";
+            } else {
+                window.onbeforeunload = null;
+            }
+            showToast(`Clickjack Protection: ${settings.clickJack ? 'ON' : 'OFF'}`);
+        }
+
+        function toggleAutoLock() {
+            settings.autoLock = !settings.autoLock;
+            save();
+            updateAdvancedUI();
+            showToast(`Auto-Lock: ${settings.autoLock ? 'ON' : 'OFF'}`);
+        }
+
+        function updateAdvancedUI() {
+            document.getElementById('cjBtn').textContent = `Clickjack: ${settings.clickJack ? 'ON' : 'OFF'}`;
+            document.getElementById('alBtn').textContent = `Auto-Lock: ${settings.autoLock ? 'ON' : 'OFF'}`;
+            document.getElementById('cjBtn').style.background = settings.clickJack ? 'var(--success)' : '#673ab7';
+            document.getElementById('alBtn').style.background = settings.autoLock ? 'var(--success)' : '#ff9800';
+        }
+
         function init() {
             loadSettings();
             document.body.setAttribute('data-theme', settings.theme || 'light');
@@ -239,6 +271,7 @@
             renderBookmarks();
             startSessionTimer();
             updateTab();
+            updateAdvancedUI();
 
             window.addEventListener('keydown', (e) => {
                 inputSeq += e.key.toLowerCase();
@@ -308,6 +341,7 @@
         }
 
         function startIdleTimer() { 
+            if (!settings.autoLock) return;
             idleTimer = setTimeout(() => { 
                 if(document.getElementById('dashboard').style.display==='block') location.reload(); 
             }, settings.idleTimeout || 120000); 
