@@ -27,7 +27,15 @@
         .launch-btn { background: var(--accent-2); font-size: 1.1rem; }
         .section-title { margin-top: 15px; font-size: 0.7rem; color: #888; text-transform: uppercase; letter-spacing: 1px; padding: 0 10px; display: flex; justify-content: space-between; align-items: center; }
         .sub-panel { background: rgba(0,0,0,0.05); padding: 10px; border-radius: 8px; margin-top: 10px; border: 1px dashed #bbb; }
-        .toast { position: fixed; bottom: 20px; right: 20px; background: #333; color: #fff; padding: 10px 20px; border-radius: 6px; font-size: 0.9rem; z-index: 1000; }
+        #logList { max-height: 100px; overflow-y: auto; font-size: 0.7rem; font-family: monospace; background: #000; color: #0f0; padding: 5px; border-radius: 4px; margin-top: 5px; }
+        
+        /* Sandbox Modal */
+        #sandboxModal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 2000; }
+        .frameWrap { width: 95%; height: 90%; background: #000; border-radius: 8px; overflow: hidden; position: relative; border: 1px solid #444; }
+        iframe { width: 100%; height: 100%; border: none; }
+        .closeBtn { position: absolute; top: 10px; right: 10px; background: var(--danger); color: #fff; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        
+        .toast { position: fixed; bottom: 20px; right: 20px; background: #333; color: #fff; padding: 10px 20px; border-radius: 6px; font-size: 0.9rem; z-index: 3000; border: 1px solid var(--accent); }
     </style>
 </head>
 <body onload="init()">
@@ -47,41 +55,44 @@
 
             <div id="dashboard" style="display:none;">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <h1 style="font-size: 1.2rem; margin:0; color: var(--accent);">Elite v42</h1>
-                    <select id="profileSelect" style="width:auto; margin:0;" onchange="switchProfile(this.value)">
-                        <option value="school">School</option>
-                        <option value="gaming">Gaming</option>
-                    </select>
+                    <h1 style="font-size: 1.1rem; margin:0; color: var(--accent);">Elite Cloaker v44</h1>
+                    <button id="themeBtn" onclick="toggleTheme()" style="width:auto; margin:0; padding:5px 10px; font-size:0.7rem;">Theme</button>
                 </div>
 
-                <div class="section-title">Forensics</div>
-                <button onclick="clogHistory()" style="background:#607d8b; font-size:0.7rem;">Flood Recently Closed</button>
-
-                <div class="section-title">Identity Profile</div>
-                <div class="sub-panel">
-                    <input type="text" id="editTitle" placeholder="Tab Title">
-                    <input type="text" id="editPanic" placeholder="Panic URL">
-                    <button onclick="saveProfileChanges()" style="background:#444; font-size:0.7rem;">Save Profile</button>
-                </div>
-
-                <div class="section-title">Engine & Security</div>
-                <select id="proxyEngine" onchange="toggleProxy()">
-                    <option value="none">Direct</option>
-                    <option value="rammerhead">Rammerhead</option>
+                <div class="section-title">Profile Selector</div>
+                <select id="profileSelect" onchange="switchProfile(this.value)">
+                    <option value="school">School Profile</option>
+                    <option value="gaming">Gaming Profile</option>
                 </select>
-                <div id="pInput" style="display:none;"><input type="text" id="uvBase" placeholder="Proxy Base URL"></div>
+
+                <div class="section-title">Security & Encryption</div>
+                <button id="protectBtn" onclick="toggleProtect()" style="background:#795548; font-size:0.7rem;">Encrypt/Protect Keys</button>
                 <button id="pkDisp" onclick="setPanicKey()" style="background:#444; font-size:0.7rem;">Set Panic Key</button>
 
-                <div class="section-title">Launch</div>
-                <input type="password" id="target" placeholder="Target (https://...)">
-                <button class="launch-btn" onclick="launch()">Launch</button>
+                <div class="section-title">Forensics Log</div>
+                <div id="logList">No activity.</div>
+                <button onclick="clearLog()" style="background:var(--danger); font-size:0.7rem; margin-top:5px;">Wipe Forensic Logs</button>
+
+                <div class="section-title">Launch Site</div>
+                <input type="text" id="target" placeholder="https://site.com">
+                <div style="display:flex; align-items:center; gap:8px; margin:5px 0;">
+                    <input type="checkbox" id="sandboxChk" style="width:auto;">
+                    <label style="font-size:0.8rem;">Launch in Sandbox Modal</label>
+                </div>
+                <button class="launch-btn" onclick="launch()">Execute Cloak</button>
                 
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                    <button onclick="exportData()" style="background:#607d8b; font-size:0.7rem;">Export</button>
-                    <button onclick="importData()" style="background:#673ab7; font-size:0.7rem;">Import</button>
+                    <button onclick="exportData()" style="background:#607d8b; font-size:0.7rem;">Export Data</button>
+                    <button onclick="location.reload()" style="background:#333; font-size:0.7rem;">Relock UI</button>
                 </div>
-                <button onclick="location.reload()" style="background:#333; font-size:0.7rem;">Relock</button>
             </div>
+        </div>
+    </div>
+
+    <div id="sandboxModal">
+        <div class="frameWrap">
+            <button class="closeBtn" onclick="closeSandbox()">X Close</button>
+            <iframe id="sandboxFrame"></iframe>
         </div>
     </div>
 
@@ -93,173 +104,148 @@
             activeProfile: 'school',
             school: { key: "1234", panic: "https://classroom.google.com", title: "404 Not Found" },
             gaming: { key: "7777", panic: "https://www.google.com", title: "My Drive" },
-            panicKey: "\\"
+            panicKey: "\\", logs: [], theme: 'light', keysProtected: false
         };
 
-        let settings = {};
+        let settings = JSON.parse(localStorage.getItem('cloakerSettings')) || defaults;
 
-        function deepMerge(base, override) {
-            const out = Array.isArray(base) ? [] : {};
-            for (const k in base) {
-                if (Object.prototype.hasOwnProperty.call(base, k)) {
-                    if (override && Object.prototype.hasOwnProperty.call(override, k)) {
-                        if (typeof base[k] === 'object' && base[k] !== null && !Array.isArray(base[k])) {
-                            out[k] = deepMerge(base[k], override[k]);
-                        } else {
-                            out[k] = override[k];
-                        }
-                    } else {
-                        out[k] = base[k];
-                    }
-                }
-            }
-            if (override) {
-                for (const k in override) {
-                    if (!Object.prototype.hasOwnProperty.call(out, k)) out[k] = override[k];
-                }
-            }
-            return out;
+        // Encryption Helpers
+        const bufToB64 = buf => btoa(String.fromCharCode(...new Uint8Array(buf)));
+        const b64ToBuf = str => Uint8Array.from(atob(str), c => c.charCodeAt(0));
+
+        async function deriveKey(pass, salt) {
+            const enc = new TextEncoder();
+            const keyMaterial = await crypto.subtle.importKey('raw', enc.encode(pass), 'PBKDF2', false, ['deriveKey']);
+            return crypto.subtle.deriveKey(
+                { name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' },
+                keyMaterial, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']
+            );
         }
 
-        function loadSettings() {
+        async function encryptKeys(pass) {
             try {
-                const raw = localStorage.getItem('cloakerSettings');
-                const parsed = raw ? JSON.parse(raw) : {};
-                settings = deepMerge(defaults, parsed);
-            } catch (e) {
-                settings = JSON.parse(JSON.stringify(defaults));
-                console.error('Failed to load settings, using defaults', e);
+                const salt = crypto.getRandomValues(new Uint8Array(16));
+                const iv = crypto.getRandomValues(new Uint8Array(12));
+                const key = await deriveKey(pass, salt);
+                const data = new TextEncoder().encode(JSON.stringify({ s: settings.school.key, g: settings.gaming.key }));
+                const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, data);
+                settings.encryptedKeys = { salt: bufToB64(salt), iv: bufToB64(iv), data: bufToB64(ct) };
+                settings.keysProtected = true;
+                delete settings.school.key; delete settings.gaming.key;
+                save(); switchProfile(settings.activeProfile); showToast("Keys Encrypted");
+            } catch (e) { showToast("Encryption Failed"); }
+        }
+
+        async function decryptKeys(pass) {
+            try {
+                const e = settings.encryptedKeys;
+                const key = await deriveKey(pass, b64ToBuf(e.salt));
+                const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64ToBuf(e.iv) }, key, b64ToBuf(e.data));
+                const obj = JSON.parse(new TextDecoder().decode(pt));
+                settings.school.key = obj.s; settings.gaming.key = obj.g;
+                settings.keysProtected = false; delete settings.encryptedKeys;
+                save(); switchProfile(settings.activeProfile); return true;
+            } catch (e) { showToast("Wrong Passphrase"); return false; }
+        }
+
+        function toggleProtect() {
+            if (settings.keysProtected) {
+                const p = prompt("Enter Master Passphrase to Unlock:");
+                if (p) decryptKeys(p);
+            } else {
+                const p = prompt("Set a Master Passphrase to encrypt your profiles:");
+                if (p) encryptKeys(p);
             }
         }
 
+        // Logic
         function save() { localStorage.setItem('cloakerSettings', JSON.stringify(settings)); }
-
         function init() {
-            loadSettings();
+            applyTheme();
             switchProfile(settings.activeProfile || 'school');
-            window.addEventListener('blur', () => { document.getElementById('uiContainer').style.opacity = 0.1; });
-            window.addEventListener('focus', () => { document.getElementById('uiContainer').style.opacity = 1; });
+            renderLogs();
+            document.addEventListener('visibilitychange', () => {
+                document.getElementById('uiContainer').style.opacity = document.hidden ? 0.1 : 1;
+            });
         }
 
-        function showLogin() { document.getElementById('shadow').style.display='none'; document.getElementById('mainUI').style.display='flex'; }
-
+        function applyTheme() { document.body.setAttribute('data-theme', settings.theme); }
+        function toggleTheme() { settings.theme = settings.theme === 'dark' ? 'light' : 'dark'; applyTheme(); save(); }
+        function showLogin() { document.getElementById('shadow').style.display = 'none'; document.getElementById('mainUI').style.display = 'flex'; }
+        
         function verify() {
+            if (settings.keysProtected) return showToast("Unlock Keys First");
             const input = document.getElementById('pswd').value;
             const currentKey = (settings[settings.activeProfile] || defaults.school).key;
             if (input === currentKey || input === RECOVERY) {
                 document.getElementById('loginArea').style.display = 'none';
                 document.getElementById('dashboard').style.display = 'block';
-            } else { showToast('Denied'); }
+            } else showToast("Access Denied");
         }
 
         function switchProfile(p) {
             settings.activeProfile = p;
-            if (!settings[p]) settings[p] = JSON.parse(JSON.stringify(defaults[p] || {}));
-            const data = settings[p];
-            document.getElementById('tabTitle').textContent = data.title || '';
-            document.getElementById('editTitle').value = data.title || '';
-            document.getElementById('editPanic').value = data.panic || '';
-            document.getElementById('pkDisp').textContent = 'Panic Key: ' + (settings.panicKey || '\\');
+            const data = settings[p] || defaults[p];
+            document.getElementById('tabTitle').textContent = data.title;
+            document.getElementById('pkDisp').textContent = "Panic Key: " + (settings.panicKey || "\\");
+            document.getElementById('protectBtn').textContent = settings.keysProtected ? "Unlock Profiles" : "Encrypt Profiles";
             save();
         }
 
-        function saveProfileChanges() {
-            const p = settings.activeProfile;
-            if (!settings[p]) settings[p] = {};
-            settings[p].title = document.getElementById('editTitle').value;
-            settings[p].panic = document.getElementById('editPanic').value;
-            save();
-            switchProfile(p);
-            showToast('Saved');
+        function renderLogs() {
+            const list = document.getElementById('logList');
+            if (!settings.logs || settings.logs.length === 0) { list.innerHTML = "No logs."; return; }
+            list.innerHTML = settings.logs.map(l => `<div>[${l.time}] ${l.target}</div>`).join('');
         }
 
-        let _panicKeyHandler = null;
-        function setPanicKey() {
-            const btn = document.getElementById('pkDisp');
-            btn.textContent = 'Press any key...';
-            if (_panicKeyHandler) window.removeEventListener('keydown', _panicKeyHandler);
-            _panicKeyHandler = (e) => {
-                settings.panicKey = e.key;
-                btn.textContent = 'Panic Key: ' + e.key;
-                save();
-                window.removeEventListener('keydown', _panicKeyHandler);
-                _panicKeyHandler = null;
-            };
-            window.addEventListener('keydown', _panicKeyHandler);
+        function clearLog() { settings.logs = []; save(); renderLogs(); showToast("Forensics Wiped"); }
+
+        function openSandbox(url) {
+            document.getElementById('sandboxFrame').src = url;
+            document.getElementById('sandboxModal').style.display = 'flex';
+            window.addEventListener('keydown', handlePanic);
         }
 
-        function clogHistory() {
-            const safe = ['https://google.com','https://wikipedia.org','https://khanacademy.org'];
-            safe.forEach((s, i) => { setTimeout(() => { const w = window.open(s, '_blank'); if(w) w.blur(); window.focus(); }, i * 400); });
+        function closeSandbox() {
+            document.getElementById('sandboxModal').style.display = 'none';
+            document.getElementById('sandboxFrame').src = 'about:blank';
+            window.removeEventListener('keydown', handlePanic);
         }
 
-        function isValidUrl(u) {
-            try { new URL(u); return true; } catch (_) { return false; }
+        function handlePanic(e) {
+            if (e.key === (settings.panicKey || "\\")) {
+                closeSandbox();
+                location.replace(settings[settings.activeProfile].panic);
+            }
         }
 
         function launch() {
-            const target = document.getElementById('target').value.trim();
-            const engine = document.getElementById('proxyEngine').value;
-            const baseInput = document.getElementById('uvBase').value.trim().replace(/\/$/, '');
-            const pData = settings[settings.activeProfile] || defaults.school;
+            const target = document.getElementById('target').value;
+            if (!target.startsWith('http')) return showToast("Need https://");
+            
+            if (!settings.logs) settings.logs = [];
+            settings.logs.unshift({ time: new Date().toLocaleTimeString(), target: target });
+            settings.logs = settings.logs.slice(0, 5);
+            save(); renderLogs();
 
-            if (!target) return showToast('Enter a target URL');
-            if (!isValidUrl(target)) return showToast('Invalid target URL');
-
-            if (engine === 'rammerhead') {
-                if (!baseInput) return showToast('Enter proxy base URL');
-                if (!isValidUrl(baseInput)) return showToast('Invalid proxy base URL');
-            }
-
-            const final = (engine === 'rammerhead') ? `${baseInput}/main/${encodeURIComponent(target)}` : target;
-
-            const safeTitle = pData.title || '';
-            const safePanic = pData.panic || '';
-            const safePanicKey = settings.panicKey || '\\';
-
-            const frameHTML = `<!doctype html><html><head><meta charset="utf-8"><title>${escapeHtml(safeTitle)}</title><style>body,html{margin:0;padding:0;height:100%;overflow:hidden;background:#000;}iframe{width:100%;height:100%;border:none;}</style></head><body><iframe src="${escapeAttr(final)}"></iframe><script>const _PANIC=${JSON.stringify(safePanic)};const _PANICK=${JSON.stringify(safePanicKey)};window.addEventListener('keydown',function(e){if(e.key===_PANICK)location.replace(_PANIC);});</script></body></html>`;
-
-            try {
-                const blob = new Blob([frameHTML], { type: 'text/html' });
-                const url = URL.createObjectURL(blob);
-                const win = window.open(url, '_blank');
-                if (win) win.focus();
-                setTimeout(() => URL.revokeObjectURL(url), 5000);
-            } catch (e) {
-                showToast('Failed to open target');
-                console.error(e);
-            }
-        }
-
-        function toggleProxy() { document.getElementById('pInput').style.display = (document.getElementById('proxyEngine').value === 'none') ? 'none' : 'block'; }
-
-        function exportData() {
-            const enc = btoa(JSON.stringify(settings));
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(enc).then(() => showToast('Copied!')).catch(() => { prompt('Copy this string manually:', enc); });
+            if (document.getElementById('sandboxChk').checked) {
+                openSandbox(target);
             } else {
-                prompt('Copy this string:', enc);
+                const win = window.open('about:blank', '_blank');
+                const pData = settings[settings.activeProfile];
+                const html = `<html><head><title>${pData.title}</title><style>body,html{margin:0;padding:0;height:100%;overflow:hidden;}iframe{width:100%;height:100%;border:none;}</style></head><body><iframe src="${target}"></iframe><script>window.onkeydown=e=>{if(e.key==="${settings.panicKey}")location.replace("${pData.panic}");}<\/script></body></html>`;
+                win.document.write(html);
+                win.document.close();
             }
         }
 
-        function importData() {
-            const d = prompt('Paste string:');
-            if (!d) return;
-            try {
-                const parsed = JSON.parse(atob(d));
-                settings = deepMerge(defaults, parsed);
-                save();
-                location.reload();
-            } catch (e) {
-                showToast('Import failed');
-                console.error('Import error', e);
-            }
+        function setPanicKey() {
+            const btn = document.getElementById('pkDisp'); btn.textContent = "Press any key...";
+            window.onkeydown = (e) => { settings.panicKey = e.key; btn.textContent = "Panic Key: " + e.key; save(); window.onkeydown = null; };
         }
 
+        function exportData() { navigator.clipboard.writeText(btoa(JSON.stringify(settings))).then(() => showToast("Export Copied")); }
         function showToast(m) { const t = document.createElement('div'); t.className='toast'; t.textContent=m; document.getElementById('toastContainer').appendChild(t); setTimeout(()=>t.remove(),2000); }
-
-        function escapeHtml(s) { return String(s).replace(/[&<>\"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c] || c; }); }
-        function escapeAttr(s) { return String(s).replace(/"/g,'&quot;'); }
     </script>
 </body>
 </html>
