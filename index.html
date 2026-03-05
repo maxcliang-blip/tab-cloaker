@@ -18,15 +18,12 @@
         }
         body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg-main); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; overflow: hidden; transition: 0.3s; }
         
-        /* 404 Facade */
         #shadow { text-align: center; user-select: none; }
         #error404 { font-size: 5rem; margin: 0; font-weight: 300; }
 
-        /* Decoy UI */
         #decoyUI { display:none; width: 100%; height: 100vh; background: #f9f9f9; color: #333; padding: 40px; box-sizing: border-box; position: absolute; top: 0; left: 0; z-index: 500; }
-        .decoy-card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .decoy-card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 10px;}
 
-        /* Main UI */
         #mainUI { display: none; width: 100%; flex-direction: column; justify-content: center; align-items: center; position: absolute; z-index: 100; }
         .container { background: var(--panel-bg); padding: 25px; border-radius: 12px; border: 1px solid var(--panel-border); width: 420px; box-shadow: 0 15px 40px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto; }
         input, select { width: 92%; padding: 10px; margin: 8px auto; border-radius: 6px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--input-text); font-family: monospace; display: block; outline: none; }
@@ -35,13 +32,13 @@
         .section-title { margin-top: 15px; font-size: 0.7rem; color: #888; text-transform: uppercase; letter-spacing: 1px; padding: 0 10px; display: flex; justify-content: space-between; align-items: center; }
         #logList { max-height: 80px; overflow-y: auto; font-size: 0.7rem; font-family: monospace; background: #000; color: #0f0; padding: 5px; border-radius: 4px; margin-top: 5px; }
         
-        /* Sandbox */
         #sandboxModal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: none; align-items: center; justify-content: center; z-index: 2000; }
         .frameWrap { width: 98%; height: 94%; background: #000; position: relative; }
         .closeBtn { position: absolute; top: 5px; right: 5px; background: var(--danger); color: #fff; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; }
         .toast { position: fixed; bottom: 20px; right: 20px; background: #333; color: #fff; padding: 10px 20px; border-radius: 6px; font-size: 0.8rem; z-index: 3000; border: 1px solid var(--accent); }
-        .bm-btn { padding: 6px; font-size: 0.65rem; background: var(--accent); border-radius: 4px; cursor: pointer; position: relative; }
-        .bm-del { position: absolute; top: -4px; right: -4px; background: var(--danger); width: 14px; height: 14px; border-radius: 50%; font-size: 0.5rem; display: flex; align-items: center; justify-content: center; }
+        .bm-btn { padding: 8px; font-size: 0.7rem; background: var(--accent); color: white; border-radius: 4px; border: none; cursor: pointer; position: relative; text-align: left; overflow: hidden; }
+        .bm-del { position: absolute; top: 0; right: 0; background: rgba(0,0,0,0.3); width: 20px; height: 100%; display: flex; align-items: center; justify-content: center; }
+        .bm-del:hover { background: var(--danger); }
     </style>
 </head>
 <body onload="init()">
@@ -74,7 +71,7 @@
     </div>
 
     <div id="mainUI">
-        <div class="container" id="uiContainer">
+        <div class="container">
             <div id="loginArea">
                 <h2 style="margin:0; font-size:1.1rem;">System Restricted</h2>
                 <input type="password" id="pswd" placeholder="Enter Key...">
@@ -83,7 +80,7 @@
 
             <div id="dashboard" style="display:none;">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <span style="font-size: 0.8rem; color: var(--accent);">v48 Ghost Protocol</span>
+                    <span style="font-size: 0.8rem; color: var(--accent);">v49 Ghost Protocol</span>
                     <button onclick="toggleTheme()" style="width:auto; margin:0; padding:4px 8px; font-size:0.6rem;">Toggle Dark</button>
                 </div>
 
@@ -95,29 +92,22 @@
                 </div>
 
                 <div class="section-title">Security</div>
-                <button id="protectBtn" onclick="toggleProtect()" style="background:#795548; font-size:0.7rem;">Encryption Panel</button>
+                <button onclick="toggleProtect()" style="background:#795548; font-size:0.7rem;">Encryption Panel</button>
                 <button id="pkDisp" onclick="setPanicKey()" style="background:#444; font-size:0.7rem;">Panic Key</button>
 
                 <div class="section-title">
                     <span>Activity</span>
-                    <span id="sessionTimer" style="font-size: 0.6rem; color: var(--accent);"></span>
+                    <span id="sessionTimer" style="font-size: 0.6rem; color: var(--accent);">0m 0s</span>
                 </div>
                 <div id="logList"></div>
                 <button onclick="clearLog()" style="background:var(--danger); font-size:0.6rem;">Wipe Logs</button>
 
                 <div class="section-title">Launcher</div>
                 <input type="text" id="target" placeholder="https://...">
-                <div style="display:flex; align-items:center; gap:8px; margin:5px 0;">
-                    <input type="checkbox" id="sandboxChk" style="width:auto;">
-                    <label style="font-size:0.75rem;">Launch in Sandbox</label>
-                </div>
-                <div style="display:flex; align-items:center; gap:8px; margin:5px 0;">
-                    <input type="checkbox" id="autoMuteChk" style="width:auto;">
-                    <label style="font-size:0.75rem;">Auto-Mute Tab</label>
-                </div>
-                <div style="display:flex; align-items:center; gap:8px; margin:5px 0;">
-                    <input type="checkbox" id="stealthModeChk" style="width:auto;">
-                    <label style="font-size:0.75rem;">Stealth Mode</label>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px;">
+                    <label style="font-size:0.7rem;"><input type="checkbox" id="sandboxChk"> Sandbox</label>
+                    <label style="font-size:0.7rem;"><input type="checkbox" id="autoMuteChk" checked> Auto-Mute</label>
+                    <label style="font-size:0.7rem;"><input type="checkbox" id="stealthModeChk" checked> Tab Stealth</label>
                 </div>
                 <button class="launch-btn" onclick="launch()">Execute Cloak</button>
 
@@ -162,7 +152,7 @@
             activeProfile: 'school',
             school: { key: "1234", panic: "https://google.com", title: "404 Not Found", favicon: "https://ssl.gstatic.com/favicon.ico" },
             gaming: { key: "7777", panic: "https://bing.com", title: "My Drive", favicon: "https://ssl.gstatic.com/favicon.ico" },
-            panicKey: "\\", logs: [], theme: 'light', keysProtected: false, idleTimeout: 120000, bookmarks: [], sessionStart: null
+            panicKey: "\\", logs: [], theme: 'light', keysProtected: false, idleTimeout: 120000, bookmarks: [], sessionStart: null, stealthOnBlur: true
         };
 
         let settings = {};
@@ -170,42 +160,17 @@
         function loadSettings() {
             const raw = localStorage.getItem('cloakerSettings');
             settings = raw ? JSON.parse(raw) : JSON.parse(JSON.stringify(defaults));
+            if (!settings.sessionStart) settings.sessionStart = Date.now();
         }
 
-        // --- Encryption ---
-        const bufToB64 = b => btoa(String.fromCharCode(...new Uint8Array(b)));
-        const b64ToBuf = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
         async function deriveKey(pass, salt) {
             const enc = new TextEncoder();
             const km = await crypto.subtle.importKey('raw', enc.encode(pass), 'PBKDF2', false, ['deriveKey']);
             return crypto.subtle.deriveKey({ name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' }, km, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
         }
 
-        async function toggleProtect() {
-            const p = prompt('Enter Master Pass:'); if (!p) return;
-            if (settings.keysProtected) {
-                try {
-                    const e = settings.encryptedKeys; const key = await deriveKey(p, b64ToBuf(e.salt));
-                    const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64ToBuf(e.iv) }, key, b64ToBuf(e.data));
-                    const obj = JSON.parse(new TextDecoder().decode(pt));
-                    settings.school.key = obj.s; settings.gaming.key = obj.g;
-                    settings.keysProtected = false; delete settings.encryptedKeys; save(); showToast('Profiles Decrypted');
-                } catch(err) { showToast('Wrong Password'); }
-            } else {
-                const salt = crypto.getRandomValues(new Uint8Array(16)); const iv = crypto.getRandomValues(new Uint8Array(12)); const key = await deriveKey(p, salt);
-                const data = new TextEncoder().encode(JSON.stringify({ s: settings.school.key, g: settings.gaming.key }));
-                const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, data);
-                settings.encryptedKeys = { salt: bufToB64(salt), iv: bufToB64(iv), data: bufToB64(ct) };
-                settings.keysProtected = true; delete settings.school.key; delete settings.gaming.key; save(); showToast('Profiles Encrypted');
-            }
-            updateProfileSelect();
-        }
-
-        // --- Core Logic ---
         function init() {
             loadSettings();
-            if (!settings.bookmarks) settings.bookmarks = [];
-            if (!settings.sessionStart) settings.sessionStart = Date.now();
             document.body.setAttribute('data-theme', settings.theme || 'light');
             updateProfileSelect();
             renderLogs();
@@ -220,8 +185,6 @@
                     inputSeq = "";
                 }
                 if (e.key === settings.panicKey || (e.ctrlKey && e.shiftKey && e.key === 'X')) {
-                    const frame = document.getElementById('sandboxFrame');
-                    if (frame) frame.src = 'about:blank';
                     location.reload();
                 }
                 resetIdleTimer();
@@ -231,8 +194,9 @@
 
             document.addEventListener('visibilitychange', () => {
                 if (document.visibilityState === 'hidden' && settings.stealthOnBlur) {
-                    document.title = settings[settings.activeProfile].title;
-                    document.getElementById('tabIcon').href = settings[settings.activeProfile].favicon;
+                    const prof = settings[settings.activeProfile] || defaults.school;
+                    document.title = prof.title;
+                    document.getElementById('tabIcon').href = prof.favicon;
                 }
             });
         }
@@ -258,44 +222,48 @@
 
             const autoMute = document.getElementById('autoMuteChk').checked;
             const stealth = document.getElementById('stealthModeChk').checked;
-            const profile = settings[settings.activeProfile];
+            const profile = settings[settings.activeProfile] || defaults.school;
 
             if (document.getElementById('sandboxChk').checked) {
-                document.getElementById('sandboxFrame').src = target;
+                const frame = document.getElementById('sandboxFrame');
+                frame.src = target;
                 document.getElementById('sandboxModal').style.display = 'flex';
+                if(autoMute) frame.onload = () => { frame.contentWindow.postMessage('mute', '*'); };
             } else {
                 const win = window.open('about:blank', '_blank');
-                const muteScript = autoMute ? `<script>document.querySelectorAll('video, audio').forEach(v => v.muted = true);</script>` : '';
-                const stealthScript = stealth ? `<script>
-                    setInterval(() => {
-                        if (document.hidden) {
-                            document.title = '${profile.title}';
-                            document.querySelector('link[rel="icon"]').href = '${profile.favicon}';
-                        }
-                    }, 100);
-                </script>` : '';
-                win.document.write(`<html><head><title>${profile.title}</title><link rel="icon" href="${profile.favicon}">${stealthScript}</head><body style="margin:0;overflow:hidden;"><iframe src="${target}" style="width:100%;height:100%;border:none;"></iframe>${muteScript}</body></html>`);
+                const muteAttr = autoMute ? 'muted' : '';
+                win.document.write(`
+                    <html><head><title>${profile.title}</title><link rel="icon" href="${profile.favicon}"></head>
+                    <body style="margin:0;overflow:hidden;">
+                    <iframe src="${target}" style="width:100%;height:100%;border:none;" ${muteAttr}></iframe>
+                    </body></html>`);
             }
         }
 
-        // --- UI Utils ---
+        function startIdleTimer() { 
+            idleTimer = setTimeout(() => { 
+                if(document.getElementById('dashboard').style.display==='block') location.reload(); 
+            }, settings.idleTimeout || 120000); 
+        }
+
         function resetIdleTimer() { clearTimeout(idleTimer); startIdleTimer(); }
-        function startIdleTimer() { idleTimer = setTimeout(() => { if(document.getElementById('dashboard').style.display==='block') location.reload(); }, settings.idleTimeout || 120000); }
+
         function updateProfileSelect() {
             const sel = document.getElementById('profileSelect'); sel.innerHTML = '';
             Object.keys(settings).forEach(k => {
-                if (typeof settings[k] === 'object' && settings[k].key !== undefined) {
+                if (typeof settings[k] === 'object' && settings[k].key) {
                     const opt = document.createElement('option'); opt.value = k; opt.textContent = k;
                     if (k === settings.activeProfile) opt.selected = true;
                     sel.appendChild(opt);
                 }
             });
         }
-        function switchProfile(v) { settings.activeProfile = v; save(); document.title = settings[v].title; }
+
+        function switchProfile(v) { settings.activeProfile = v; save(); showToast('Profile: ' + v); }
         function addProfile() {
             const name = document.getElementById('newProfileName').value.trim();
-            if (!name) return;
-            settings[name] = { key: "1234", panic: "https://google.com", title: name, favicon: "https://ssl.gstatic.com/favicon.ico" };
+            if (!name || settings[name]) return;
+            settings[name] = JSON.parse(JSON.stringify(defaults.school));
             save(); updateProfileSelect();
         }
 
@@ -305,25 +273,19 @@
             if (!name || !url) return;
             settings.bookmarks.push({ name, url });
             save(); renderBookmarks();
-            document.getElementById('bmName').value = '';
-            document.getElementById('bmUrl').value = '';
         }
 
         function renderBookmarks() {
             const list = document.getElementById('bookmarksList');
-            list.innerHTML = settings.bookmarks.map((bm, i) =>
-                `<button class="bm-btn" onclick="document.getElementById('target').value='${bm.url}';launch()">
+            list.innerHTML = (settings.bookmarks || []).map((bm, i) => `
+                <button class="bm-btn" onclick="document.getElementById('target').value='${bm.url}';launch()">
                     ${bm.name}
-                    <span class="bm-del" onclick="event.stopPropagation();removeBookmark(${i})">×</span>
-                </button>`
-            ).join('');
+                    <div class="bm-del" onclick="event.stopPropagation();removeBookmark(${i})">×</div>
+                </button>
+            `).join('');
         }
 
-        function removeBookmark(i) {
-            settings.bookmarks.splice(i, 1);
-            save(); renderBookmarks();
-        }
-
+        function removeBookmark(i) { settings.bookmarks.splice(i, 1); save(); renderBookmarks(); }
         function startSessionTimer() {
             setInterval(() => {
                 const elapsed = Date.now() - settings.sessionStart;
@@ -333,19 +295,18 @@
             }, 1000);
         }
 
-        function clearLog() {
-            settings.logs = [];
-            save(); renderLogs();
-        }
-
         function renderLogs() { document.getElementById('logList').innerHTML = (settings.logs || []).map(l => `<div>[${l.time}] ${l.target}</div>`).join('') || 'No history'; }
+        function clearLog() { settings.logs = []; save(); renderLogs(); }
         function showToast(m) { const t = document.createElement('div'); t.className='toast'; t.textContent=m; document.getElementById('toastContainer').appendChild(t); setTimeout(()=>t.remove(),2000); }
         function closeSandbox() { document.getElementById('sandboxModal').style.display = 'none'; document.getElementById('sandboxFrame').src = 'about:blank'; }
         function toggleTheme() { settings.theme = settings.theme === 'dark' ? 'light' : 'dark'; document.body.setAttribute('data-theme', settings.theme); save(); }
         function exportData() { navigator.clipboard.writeText(btoa(JSON.stringify(settings))).then(()=>showToast('Config Copied')); }
-        function downloadConfig() { const blob = new Blob([JSON.stringify(settings)], {type: 'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'config.json'; a.click(); }
+        function downloadConfig() { const a = document.createElement('a'); a.href = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(settings)); a.download = 'config.json'; a.click(); }
         function importFromFile(e) { const r = new FileReader(); r.onload = () => { settings = JSON.parse(r.result); save(); location.reload(); }; r.readAsText(e.target.files[0]); }
-        function setPanicKey() { const btn = document.getElementById('pkDisp'); btn.textContent = 'Press a key...'; window.onkeydown = (e) => { settings.panicKey = e.key; btn.textContent = 'Panic: ' + e.key; save(); window.onkeydown = null; init(); }; }
+        function setPanicKey() { 
+            const btn = document.getElementById('pkDisp'); btn.textContent = 'Press a key...'; 
+            window.onkeydown = (e) => { settings.panicKey = e.key; btn.textContent = 'Panic: ' + e.key; save(); window.onkeydown = null; init(); }; 
+        }
     </script>
 </body>
 </html>
