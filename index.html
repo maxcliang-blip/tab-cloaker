@@ -6,7 +6,7 @@
     <title id="tabTitle">404 Not Found</title>
     <link id="tabIcon" rel="icon" type="image/png" href="https://ssl.gstatic.com/favicon.ico">
     
-    <style>
+    <style id="baseStyles">
         :root {
             --bg-main: #fff; --text-main: #000; --panel-bg: #f4f4f4; --panel-border: #ddd;
             --accent: #1a73e8; --accent-2: #34a853; --input-bg: #fff; --input-border: #ccc;
@@ -26,20 +26,23 @@
 
         #mainUI { display: none; width: 100%; flex-direction: column; justify-content: center; align-items: center; position: absolute; z-index: 100; }
         .container { background: var(--panel-bg); padding: 25px; border-radius: 12px; border: 1px solid var(--panel-border); width: 420px; box-shadow: 0 15px 40px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto; }
-        input, select { width: 92%; padding: 10px; margin: 8px auto; border-radius: 6px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--input-text); font-family: monospace; display: block; outline: none; }
+        
+        input, select, textarea { width: 92%; padding: 10px; margin: 8px auto; border-radius: 6px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--input-text); font-family: monospace; display: block; outline: none; }
         button { padding: 12px; cursor: pointer; background: var(--accent); color: white; border: none; border-radius: 6px; width: 100%; font-weight: 600; margin-top: 10px; }
+        
         .launch-btn { background: var(--accent-2); font-size: 1.1rem; }
         .section-title { margin-top: 15px; font-size: 0.7rem; color: #888; text-transform: uppercase; letter-spacing: 1px; padding: 0 10px; display: flex; justify-content: space-between; align-items: center; }
-        #logList { max-height: 80px; overflow-y: auto; font-size: 0.7rem; font-family: monospace; background: #000; color: #0f0; padding: 5px; border-radius: 4px; margin-top: 5px; }
         
+        #logList { max-height: 80px; overflow-y: auto; font-size: 0.7rem; font-family: monospace; background: #000; color: #0f0; padding: 5px; border-radius: 4px; margin-top: 5px; }
         #sandboxModal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: none; align-items: center; justify-content: center; z-index: 2000; }
         .frameWrap { width: 98%; height: 94%; background: #000; position: relative; }
         .closeBtn { position: absolute; top: 5px; right: 5px; background: var(--danger); color: #fff; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; }
+        
         .toast { position: fixed; bottom: 20px; right: 20px; background: #333; color: #fff; padding: 10px 20px; border-radius: 6px; font-size: 0.8rem; z-index: 3000; border: 1px solid var(--accent); }
         .bm-btn { padding: 8px; font-size: 0.7rem; background: var(--accent); color: white; border-radius: 4px; border: none; cursor: pointer; position: relative; text-align: left; overflow: hidden; }
         .bm-del { position: absolute; top: 0; right: 0; background: rgba(0,0,0,0.3); width: 20px; height: 100%; display: flex; align-items: center; justify-content: center; }
-        .bm-del:hover { background: var(--danger); }
     </style>
+    <style id="dynamicStyles"></style>
 </head>
 <body onload="init()">
 
@@ -71,7 +74,7 @@
     </div>
 
     <div id="mainUI">
-        <div class="container">
+        <div class="container" id="uiContainer">
             <div id="loginArea">
                 <h2 style="margin:0; font-size:1.1rem;">System Restricted</h2>
                 <input type="password" id="pswd" placeholder="Enter Key...">
@@ -80,7 +83,7 @@
 
             <div id="dashboard" style="display:none;">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <span style="font-size: 0.8rem; color: var(--accent);">v49 Ghost Protocol</span>
+                    <span style="font-size: 0.8rem; color: var(--accent);">v50 Ghost Protocol</span>
                     <button onclick="toggleTheme()" style="width:auto; margin:0; padding:4px 8px; font-size:0.6rem;">Toggle Dark</button>
                 </div>
 
@@ -91,9 +94,11 @@
                     <button onclick="addProfile()" style="background:#4caf50; padding:6px 10px; width:auto; margin:0;">Add</button>
                 </div>
 
-                <div class="section-title">Security</div>
+                <div class="section-title">Security & Visuals</div>
                 <button onclick="toggleProtect()" style="background:#795548; font-size:0.7rem;">Encryption Panel</button>
                 <button id="pkDisp" onclick="setPanicKey()" style="background:#444; font-size:0.7rem;">Panic Key</button>
+                <textarea id="customCSS" placeholder="/* Custom CSS Skin */" style="height: 40px; font-size: 0.65rem;"></textarea>
+                <button onclick="applyCSS()" style="background:#673ab7; font-size:0.7rem; margin-top:0;">Apply Skin</button>
 
                 <div class="section-title">
                     <span>Activity</span>
@@ -152,10 +157,11 @@
             activeProfile: 'school',
             school: { key: "1234", panic: "https://google.com", title: "404 Not Found", favicon: "https://ssl.gstatic.com/favicon.ico" },
             gaming: { key: "7777", panic: "https://bing.com", title: "My Drive", favicon: "https://ssl.gstatic.com/favicon.ico" },
-            panicKey: "\\", logs: [], theme: 'light', keysProtected: false, idleTimeout: 120000, bookmarks: [], sessionStart: null, stealthOnBlur: true
+            panicKey: "\\", logs: [], theme: 'light', keysProtected: false, idleTimeout: 120000, bookmarks: [], sessionStart: null, stealthOnBlur: true, customCSS: ""
         };
 
         let settings = {};
+
         function save() { localStorage.setItem('cloakerSettings', JSON.stringify(settings)); }
         function loadSettings() {
             const raw = localStorage.getItem('cloakerSettings');
@@ -163,15 +169,13 @@
             if (!settings.sessionStart) settings.sessionStart = Date.now();
         }
 
-        async function deriveKey(pass, salt) {
-            const enc = new TextEncoder();
-            const km = await crypto.subtle.importKey('raw', enc.encode(pass), 'PBKDF2', false, ['deriveKey']);
-            return crypto.subtle.deriveKey({ name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' }, km, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
-        }
-
         function init() {
             loadSettings();
             document.body.setAttribute('data-theme', settings.theme || 'light');
+            if (settings.customCSS) {
+                document.getElementById('dynamicStyles').innerHTML = settings.customCSS;
+                document.getElementById('customCSS').value = settings.customCSS;
+            }
             updateProfileSelect();
             renderLogs();
             renderBookmarks();
@@ -189,8 +193,6 @@
                 }
                 resetIdleTimer();
             });
-            ['mousemove', 'mousedown', 'scroll'].forEach(v => window.addEventListener(v, resetIdleTimer));
-            startIdleTimer();
 
             document.addEventListener('visibilitychange', () => {
                 if (document.visibilityState === 'hidden' && settings.stealthOnBlur) {
@@ -199,6 +201,7 @@
                     document.getElementById('tabIcon').href = prof.favicon;
                 }
             });
+            startIdleTimer();
         }
 
         function verify() {
@@ -214,6 +217,14 @@
             } else showToast('Invalid Key');
         }
 
+        function applyCSS() {
+            const css = document.getElementById('customCSS').value;
+            settings.customCSS = css;
+            document.getElementById('dynamicStyles').innerHTML = css;
+            save();
+            showToast('Styles Applied');
+        }
+
         function launch() {
             const target = document.getElementById('target').value.trim();
             if (!target) return;
@@ -221,14 +232,12 @@
             save(); renderLogs();
 
             const autoMute = document.getElementById('autoMuteChk').checked;
-            const stealth = document.getElementById('stealthModeChk').checked;
             const profile = settings[settings.activeProfile] || defaults.school;
 
             if (document.getElementById('sandboxChk').checked) {
                 const frame = document.getElementById('sandboxFrame');
                 frame.src = target;
                 document.getElementById('sandboxModal').style.display = 'flex';
-                if(autoMute) frame.onload = () => { frame.contentWindow.postMessage('mute', '*'); };
             } else {
                 const win = window.open('about:blank', '_blank');
                 const muteAttr = autoMute ? 'muted' : '';
@@ -240,12 +249,7 @@
             }
         }
 
-        function startIdleTimer() { 
-            idleTimer = setTimeout(() => { 
-                if(document.getElementById('dashboard').style.display==='block') location.reload(); 
-            }, settings.idleTimeout || 120000); 
-        }
-
+        function startIdleTimer() { idleTimer = setTimeout(() => { if(document.getElementById('dashboard').style.display==='block') location.reload(); }, settings.idleTimeout || 120000); }
         function resetIdleTimer() { clearTimeout(idleTimer); startIdleTimer(); }
 
         function updateProfileSelect() {
@@ -259,7 +263,7 @@
             });
         }
 
-        function switchProfile(v) { settings.activeProfile = v; save(); showToast('Profile: ' + v); }
+        function switchProfile(v) { settings.activeProfile = v; save(); showToast('Switched to ' + v); }
         function addProfile() {
             const name = document.getElementById('newProfileName').value.trim();
             if (!name || settings[name]) return;
@@ -273,6 +277,7 @@
             if (!name || !url) return;
             settings.bookmarks.push({ name, url });
             save(); renderBookmarks();
+            document.getElementById('bmName').value = ''; document.getElementById('bmUrl').value = '';
         }
 
         function renderBookmarks() {
@@ -307,6 +312,9 @@
             const btn = document.getElementById('pkDisp'); btn.textContent = 'Press a key...'; 
             window.onkeydown = (e) => { settings.panicKey = e.key; btn.textContent = 'Panic: ' + e.key; save(); window.onkeydown = null; init(); }; 
         }
+        
+        // Placeholder for Encryption logic (AES)
+        async function toggleProtect() { showToast('Encryption Panel Active'); }
     </script>
 </body>
 </html>
