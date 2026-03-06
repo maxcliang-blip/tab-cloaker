@@ -4,12 +4,12 @@
     --danger: #d93025; --success: #2e7d32;
 }
 
-body[data-theme="dark"] {
-    --bg-main: #111; --text-main: #eee; --panel-bg: #222; --panel-border: #444;
-    --input-bg: #000; --input-border: #555;
-}
+body[data-skin="outlook"] { --bg-main: #f3f2f1; --text-main: #323130; --panel-bg: #ffffff; --accent: #0078d4; --panel-border: #edebe9; }
+body[data-skin="discord"] { --bg-main: #36393f; --text-main: #dcddde; --panel-bg: #2f3136; --accent: #5865f2; --panel-border: #202225; --input-bg: #40444b; }
+body[data-skin="canvas"] { --bg-main: #ffffff; --text-main: #2d3b45; --panel-bg: #f5f5f5; --accent: #e00000; --panel-border: #c7cdded; }
 
-body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg-main); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; overflow: hidden; }
+body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg-main); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; overflow: hidden; transition: 0.3s; }
+body.ghost-active { cursor: none !important; }
 
 #shadow { text-align: center; user-select: none; }
 #error404 { font-size: 5rem; margin: 0; font-weight: 300; }
@@ -25,22 +25,17 @@ body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg-main
 #mainUI { display: none; width: 100%; flex-direction: column; justify-content: center; align-items: center; position: absolute; z-index: 100; opacity: 0; transition: opacity 0.5s; }
 .container { background: var(--panel-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--panel-border); width: 480px; box-shadow: 0 15px 40px rgba(0,0,0,0.3); max-height: 95vh; overflow-y: auto; }
 
-input, textarea { width: 92%; padding: 10px; margin: 8px auto; border-radius: 6px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-main); font-family: monospace; display: block; outline: none; }
-
+input, textarea, select { width: 92%; padding: 10px; margin: 8px auto; border-radius: 6px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-main); font-family: monospace; display: block; outline: none; }
 button { padding: 10px; cursor: pointer; background: var(--accent); color: white; border: none; border-radius: 6px; width: 100%; font-weight: 600; margin-top: 5px; }
 
 .section-title { margin-top: 15px; font-size: 0.7rem; color: #888; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--panel-border); padding-bottom: 3px; }
-
 .tab-bar { display: flex; gap: 5px; margin-bottom: 10px; }
-.tab-btn { font-size: 0.65rem; background: #444; flex: 1; }
+.tab-btn { font-size: 0.65rem; background: #444; flex: 1; border: none; color: white; padding: 8px; border-radius: 4px; }
 .tab-btn.active { background: var(--accent); }
 .tab-content { display: none; }
 .tab-content.active { display: block; }
 
-#historyList { display: flex; flex-wrap: wrap; gap: 5px; margin: 10px 0; }
-.hist-tag { font-size: 0.6rem; background: #444; color: #fff; padding: 3px 6px; border-radius: 4px; cursor: pointer; }
-
+#historyList, #clipboardList { display: flex; flex-wrap: wrap; gap: 5px; margin: 10px 0; }
+.hist-tag, .clip-tag { font-size: 0.6rem; background: #444; color: #fff; padding: 3px 6px; border-radius: 4px; cursor: pointer; }
 #dropZone { border: 2px dashed #888; padding: 20px; text-align: center; border-radius: 8px; margin-top: 10px; color: #888; }
-#dropZone.dragover { background: rgba(26, 115, 232, 0.1); border-color: var(--accent); }
-.file-item { font-size: 0.7rem; background: var(--input-bg); padding: 5px; margin-top: 5px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; }
-.exit-btn { background: #555; width: auto; padding: 10px 20px; }
+.file-item { font-size: 0.7rem; background: var(--input-bg); padding: 5px; margin-top: 5px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--panel-border); }
