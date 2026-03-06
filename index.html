@@ -6,9 +6,10 @@
     <title id="tabTitle">404 Not Found</title>
     <link id="tabIcon" rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=">
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
-<body onload="init()">
+<body onload="init()" data-skin="default" id="ghostBody">
 
     <div id="shadow">
         <h1 id="error404">Error 404</h1>
@@ -16,7 +17,7 @@
     </div>
 
     <div id="decoyUI">
-        <div id="liveTicker"><span>Loading Live Academic Feed... System Status: Optimal... Connectivity: Secure... No faculty alerts...</span></div>
+        <div id="liveTicker"><span>Loading Academic Data... <b id="hbStatus">HEARTBEAT: ACTIVE</b>... System Secure...</span></div>
         <div class="decoy-container">
             <h1 id="decoyMainTitle">Semester Study Planner</h1>
             <div class="decoy-card">
@@ -46,33 +47,50 @@
                 </div>
 
                 <div id="core" class="tab-content active">
-                    <div class="section-title">Launcher & History</div>
+                    <div class="section-title">Proxy Launcher</div>
                     <div class="flex-gap">
-                        <input type="text" id="target" placeholder="https://..." style="flex:3;">
-                        <button onclick="launch()" class="success-btn" style="flex:1;">Launch</button>
+                        <input type="text" id="target" placeholder="https://..." style="flex:2;">
+                        <select id="proxyToggle" style="flex:1;"><option value="direct">Direct</option><option value="proxy">via Proxy</option></select>
+                        <button onclick="launch()" class="success-btn" style="flex:1;">Go</button>
                     </div>
                     <div id="historyList"></div>
                     
-                    <div class="section-title">Vault <span id="saveStatus"></span></div>
-                    <textarea id="vaultNotes" oninput="saveVault()" placeholder="Secure notes..."></textarea>
+                    <div class="section-title">Encrypted Vault <span id="saveStatus"></span></div>
+                    <textarea id="vaultNotes" oninput="saveVault()" placeholder="Notes..."></textarea>
+                    
+                    <div class="section-title">Quick Snippets</div>
+                    <div id="clipboardList"></div>
+                    <div class="flex-gap">
+                        <input id="newClip" placeholder="Add snippet..." style="flex:3;">
+                        <button onclick="addSnippet()" style="flex:1;">Add</button>
+                    </div>
                 </div>
 
                 <div id="stash" class="tab-content">
-                    <div class="section-title">File Stash (Base64)</div>
-                    <div id="dropZone">Drag & Drop File Here</div>
+                    <div class="section-title">File Stash</div>
+                    <div id="dropZone">Drag & Drop Here</div>
                     <div id="fileList"></div>
                 </div>
 
                 <div id="sys" class="tab-content">
+                    <div class="section-title">Camouflage Skin</div>
+                    <select id="skinSelect" onchange="updateSkin()">
+                        <option value="default">Default Pro</option>
+                        <option value="outlook">Outlook (Corporate)</option>
+                        <option value="discord">Discord (Dev)</option>
+                        <option value="canvas">Canvas (Student)</option>
+                    </select>
+
                     <div class="section-title">Tab Identity</div>
                     <input id="tabNameIn" placeholder="Tab Title" oninput="updateIdentity()">
                     <input id="tabIconIn" placeholder="Favicon URL" oninput="updateIdentity()">
                     
-                    <div class="section-title">Global</div>
-                    <label style="font-size: 0.7rem;"><input type="checkbox" id="restoreCheck" onchange="updateRestore()"> Restore Session on Login</label>
-                    <button onclick="toggleTheme()">Toggle Dark Mode</button>
+                    <div class="section-title">Security & Network</div>
+                    <label><input type="checkbox" id="restoreCheck" onchange="updateRestore()"> Restore Session</label>
+                    <label><input type="checkbox" id="hbCheck" onchange="updateHB()" checked> Anti-Timeout Heartbeat</label>
+                    <label><input type="checkbox" id="ghostCheck" onchange="updateGhost()"> Ghost Cursor Mode</label>
                     <button onclick="setPanicKey()" id="pkDisp">Set Panic Key</button>
-                    <button onclick="panicExport()" class="danger-btn">EXPORT & WIPE</button>
+                    <button onclick="panicExport()" class="danger-btn">WIPE ALL</button>
                 </div>
             </div>
         </div>
