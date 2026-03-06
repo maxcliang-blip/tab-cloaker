@@ -16,6 +16,7 @@
     </div>
 
     <div id="decoyUI">
+        <div id="liveTicker"><span>Loading Live Academic Feed... System Status: Optimal... Faculty Updates: None...</span></div>
         <div class="decoy-container">
             <h1 id="decoyMainTitle">Semester Study Planner</h1>
             <div class="decoy-card">
@@ -40,16 +41,26 @@
             <div id="dashboard" style="display:none;">
                 <div class="tab-bar">
                     <button class="tab-btn active" onclick="openTab('core')">CORE</button>
+                    <button class="tab-btn" onclick="openTab('stash')">STASH</button>
                     <button class="tab-btn" onclick="openTab('sys')">SYS</button>
                 </div>
 
                 <div id="core" class="tab-content active">
-                    <div class="section-title">Launcher</div>
-                    <input type="text" id="target" placeholder="https://...">
-                    <button onclick="launch()" class="success-btn">Launch Ghost Frame</button>
+                    <div class="section-title">Launcher & History</div>
+                    <div class="flex-gap">
+                        <input type="text" id="target" placeholder="https://..." style="flex:3;">
+                        <button onclick="launch()" class="success-btn" style="flex:1;">Launch</button>
+                    </div>
+                    <div id="historyList"></div>
                     
                     <div class="section-title">Vault <span id="saveStatus"></span></div>
-                    <textarea id="vaultNotes" oninput="saveVault()" placeholder="Markdown-ready notes..."></textarea>
+                    <textarea id="vaultNotes" oninput="saveVault()" placeholder="Secure notes..."></textarea>
+                </div>
+
+                <div id="stash" class="tab-content">
+                    <div class="section-title">File Stash (Base64)</div>
+                    <div id="dropZone">Drag & Drop File Here</div>
+                    <div id="fileList"></div>
                 </div>
 
                 <div id="sys" class="tab-content">
@@ -57,13 +68,11 @@
                     <input id="tabNameIn" placeholder="Tab Title" oninput="updateIdentity()">
                     <input id="tabIconIn" placeholder="Favicon URL" oninput="updateIdentity()">
                     
-                    <div class="section-title">Decoy Customizer</div>
-                    <input id="editMainTitle" placeholder="Decoy Header" oninput="updateDecoy()">
-                    
                     <div class="section-title">Global</div>
+                    <label style="font-size: 0.7rem;"><input type="checkbox" id="restoreCheck" onchange="updateRestore()"> Restore Session on Login</label>
                     <button onclick="toggleTheme()">Toggle Dark Mode</button>
                     <button onclick="setPanicKey()" id="pkDisp">Set Panic Key</button>
-                    <button onclick="panicExport()" class="danger-btn">EXPORT & WIPE DATA</button>
+                    <button onclick="panicExport()" class="danger-btn">EXPORT & WIPE</button>
                 </div>
             </div>
         </div>
