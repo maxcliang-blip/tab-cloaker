@@ -1,0 +1,72 @@
+:root {
+    --bg-main: #fff; --text-main: #000; --panel-bg: #f4f4f4; --panel-border: #ddd;
+    --accent: #1a73e8; --input-bg: #fff; --input-border: #ccc;
+    --danger: #d93025; --success: #2e7d32;
+}
+
+body[data-theme="dark"] {
+    --bg-main: #111; --text-main: #eee; --panel-bg: #222; --panel-border: #444;
+    --input-bg: #000; --input-border: #555;
+}
+
+body { 
+    margin: 0; font-family: 'Segoe UI', sans-serif; 
+    background: var(--bg-main); color: var(--text-main); 
+    height: 100vh; display: flex; flex-direction: column; 
+    justify-content: center; align-items: center; overflow: hidden; 
+}
+
+#shadow { text-align: center; user-select: none; }
+#error404 { font-size: 5rem; margin: 0; font-weight: 300; }
+
+/* Decoy Styles */
+#decoyUI { 
+    display:none; width: 100%; height: 100vh; background: #f9f9f9; 
+    color: #333; padding: 40px; box-sizing: border-box; 
+    position: absolute; top: 0; left: 0; z-index: 500; 
+}
+.decoy-container { max-width: 800px; margin: auto; }
+.decoy-card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 15px; }
+#pomoDisplay { font-size: 3rem; margin: 10px 0; text-align: center; }
+
+/* Main Dashboard Styles */
+#mainUI { 
+    display: none; width: 100%; flex-direction: column; 
+    justify-content: center; align-items: center; 
+    position: absolute; z-index: 100; opacity: 0; transition: opacity 0.5s; 
+}
+.container { 
+    background: var(--panel-bg); padding: 20px; border-radius: 12px; 
+    border: 1px solid var(--panel-border); width: 480px; 
+    box-shadow: 0 15px 40px rgba(0,0,0,0.3); max-height: 95vh; overflow-y: auto; 
+}
+
+input, textarea { 
+    width: 92%; padding: 10px; margin: 8px auto; border-radius: 6px; 
+    border: 1px solid var(--input-border); background: var(--input-bg); 
+    color: var(--text-main); font-family: monospace; display: block; 
+}
+
+button { 
+    padding: 10px; cursor: pointer; background: var(--accent); 
+    color: white; border: none; border-radius: 6px; width: 100%; 
+    font-weight: 600; margin-top: 5px; 
+}
+
+.section-title { 
+    margin-top: 15px; font-size: 0.7rem; color: #888; 
+    text-transform: uppercase; letter-spacing: 1px; 
+    border-bottom: 1px solid var(--panel-border); padding-bottom: 3px; 
+}
+
+.tab-bar { display: flex; gap: 5px; margin-bottom: 10px; }
+.tab-btn { font-size: 0.65rem; background: #444; flex: 1; }
+.tab-btn.active { background: var(--accent); }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+#vaultNotes { height: 150px; }
+.danger-btn { background: var(--danger); }
+.success-btn { background: var(--success); }
+#saveStatus { font-size: 0.6rem; float: right; color: var(--success); }
+.flex-gap { display: flex; gap: 10px; }
