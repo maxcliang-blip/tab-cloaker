@@ -11,10 +11,9 @@ body[data-theme="dark"] {
 
 body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg-main); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; overflow: hidden; }
 
-#shadow { text-align: center; }
+#shadow { text-align: center; user-select: none; }
 #error404 { font-size: 5rem; margin: 0; font-weight: 300; }
 
-/* Decoy Ticker */
 #liveTicker { position: absolute; top: 0; width: 100%; background: #eee; color: #555; padding: 5px; font-size: 0.7rem; overflow: hidden; border-bottom: 1px solid #ddd; }
 #liveTicker span { display: inline-block; white-space: nowrap; animation: scroll 25s linear infinite; }
 @keyframes scroll { from { transform: translateX(100%); } to { transform: translateX(-100%); } }
@@ -26,7 +25,7 @@ body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg-main
 #mainUI { display: none; width: 100%; flex-direction: column; justify-content: center; align-items: center; position: absolute; z-index: 100; opacity: 0; transition: opacity 0.5s; }
 .container { background: var(--panel-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--panel-border); width: 480px; box-shadow: 0 15px 40px rgba(0,0,0,0.3); max-height: 95vh; overflow-y: auto; }
 
-input, textarea { width: 92%; padding: 10px; margin: 8px auto; border-radius: 6px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-main); font-family: monospace; display: block; }
+input, textarea { width: 92%; padding: 10px; margin: 8px auto; border-radius: 6px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-main); font-family: monospace; display: block; outline: none; }
 
 button { padding: 10px; cursor: pointer; background: var(--accent); color: white; border: none; border-radius: 6px; width: 100%; font-weight: 600; margin-top: 5px; }
 
@@ -43,4 +42,5 @@ button { padding: 10px; cursor: pointer; background: var(--accent); color: white
 
 #dropZone { border: 2px dashed #888; padding: 20px; text-align: center; border-radius: 8px; margin-top: 10px; color: #888; }
 #dropZone.dragover { background: rgba(26, 115, 232, 0.1); border-color: var(--accent); }
-.file-item { font-size: 0.7rem; background: var(--input-bg); padding: 5px; margin-top: 5px; border-radius: 4px; display: flex; justify-content: space-between; }
+.file-item { font-size: 0.7rem; background: var(--input-bg); padding: 5px; margin-top: 5px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; }
+.exit-btn { background: #555; width: auto; padding: 10px 20px; }
