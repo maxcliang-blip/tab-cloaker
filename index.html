@@ -1,83 +1,214 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title id="tabTitle">404 Not Found</title>
-    <link id="tabIcon" rel="icon" type="image/png" href="https://ssl.gstatic.com/favicon.ico">
-    <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-</head>
-<body onload="init()">
+let settings = { 
+    vault: "", 
+    theme: "light", 
+    panicKey: "\\",
+    identity: { title: "404 Not Found", icon: "https://ssl.gstatic.com/favicon.ico" },
+    decoy: { main: "Semester Study Planner" },
+    history: [], 
+    stash: [], 
+    restoreSession: false, 
+    lastUrl: ""
+};
 
-    <div id="shadow">
-        <h1 id="error404">Error 404</h1>
-        <p>The requested URL was not found on this server.</p>
-    </div>
+let inputSeq = ""; 
+let pomoInterval = null;
 
-    <div id="decoyUI">
-        <div id="liveTicker"><span>Loading Live Academic Feed... System Status: Optimal... Faculty Updates: None...</span></div>
-        <div class="decoy-container">
-            <h1 id="decoyMainTitle">Semester Study Planner</h1>
-            <div class="decoy-card">
-                <h3 id="decoyTimerTitle">Focus Session</h3>
-                <h1 id="pomoDisplay">25:00</h1>
-                <div class="flex-gap">
-                    <button onclick="startTimer(25)" id="decoyWorkBtn">Start Work</button>
-                    <button onclick="startTimer(5)" id="decoyBreakBtn">Break</button>
+function init() {
+    const raw = localStorage.getItem('cloaker_v60');
+    if(raw) settings = JSON.parse(raw);
+    
+    // Core setup
+    applyIdentity();
+    document.getElementById('decoyMainTitle').textContent = settings.decoy.main;
+    document.body.setAttribute('data-theme', settings.theme);
+    document.getElementById('vaultNotes').value = settings.vault;
+    document.getElementById('restoreCheck').checked = settings.restoreSession;
+    
+    // Tools setup
+    renderHistory();
+    renderStash();
+    setupDropZone();
+
+    // Unlock listener
+    window.onkeyup = (e) => {
+        inputSeq += e.key.toLowerCase();
+        if(inputSeq.endsWith("cloak")) {
+            document.getElementById('shadow').style.display = 'none';
+            const main = document.getElementById('mainUI');
+            main.style.display = 'flex';
+            setTimeout(() => main.style.opacity = '1', 10);
+        }
+        if(e.key === settings.panicKey) location.reload();
+    };
+}
+
+// --- IDENTITY & UI FUNCTIONS ---
+
+function applyIdentity() {
+    document.title = settings.identity.title;
+    document.getElementById('tabIcon').href = settings.identity.icon;
+    document.getElementById('tabNameIn').value = settings.identity.title;
+    document.getElementById('tabIconIn').value = settings.identity.icon;
+}
+
+function updateIdentity() {
+    settings.identity.title = document.getElementById('tabNameIn').value || "404 Not Found";
+    settings.identity.icon = document.getElementById('tabIconIn').value || "https://ssl.gstatic.com/favicon.ico";
+    applyIdentity();
+    save();
+}
+
+function updateDecoy() {
+    settings.decoy.main = document.getElementById('editMainTitle').value;
+    document.getElementById('decoyMainTitle').textContent = settings.decoy.main;
+    save();
+}
+
+function toggleTheme() {
+    settings.theme = settings.theme === 'dark' ? 'light' : 'dark';
+    document.body.setAttribute('data-theme', settings.theme);
+    save();
+}
+
+function openTab(id) {
+    document.querySelectorAll('.tab-content, .tab-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    // We handle the button active state manually or via event
+    if (event) {
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+    }
+}
+
+// --- LAUNCHER & HISTORY ---
+
+function verify() {
+    const p = document.getElementById('pswd').value;
+    if(p === "1234") {
+        document.getElementById('loginArea').style.display = 'none';
+        document.getElementById('dashboard').style.display = 'block';
+        if(settings.restoreSession && settings.lastUrl) launch(settings.lastUrl);
+    } else if (p === "planner2026") {
+        document.getElementById('mainUI').style.display = 'none';
+        document.getElementById('decoyUI').style.display = 'block';
+    }
+}
+
+function launch(url) {
+    const t = url || document.getElementById('target').value;
+    if(!t) return;
+    
+    settings.lastUrl = t;
+    if(!settings.history.includes(t)) {
+        settings.history.unshift(t);
+        if(settings.history.length > 8) settings.history.pop();
+    }
+    save(); 
+    renderHistory();
+    
+    const win = window.open('about:blank', '_blank');
+    win.document.write(`<iframe src="${t}" style="width:100%;height:100%;border:none;position:fixed;inset:0;"></iframe>`);
+}
+
+function renderHistory() {
+    const histCont = document.getElementById('historyList');
+    if (histCont) {
+        histCont.innerHTML = settings.history.map(url => 
+            `<span class="hist-tag" onclick="launch('${url}')">${url.split('//')[1]?.substring(0,15) || url.substring(0,15)}...</span>`
+        ).join('');
+    }
+}
+
+// --- FILE STASH & VAULT ---
+
+function setupDropZone() {
+    const dz = document.getElementById('dropZone');
+    if(!dz) return;
+    dz.ondragover = () => { dz.classList.add('dragover'); return false; };
+    dz.ondragleave = () => { dz.classList.remove('dragover'); return false; };
+    dz.ondrop = (e) => {
+        dz.classList.remove('dragover');
+        e.preventDefault();
+        const file = e.dataTransfer.files[0];
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            settings.stash.push({ name: file.name, data: event.target.result });
+            save(); renderStash();
+        };
+        reader.readAsDataURL(file);
+    };
+}
+
+function renderStash() {
+    const stashCont = document.getElementById('fileList');
+    if (stashCont) {
+        stashCont.innerHTML = settings.stash.map((file, i) => `
+            <div class="file-item">
+                <span>${file.name}</span>
+                <div>
+                    <button onclick="downloadFile(${i})" style="width:auto; padding:2px 5px; font-size:0.6rem;">Open</button>
+                    <button onclick="deleteFile(${i})" style="width:auto; padding:2px 5px; background:red; font-size:0.6rem;">X</button>
                 </div>
             </div>
-            <button onclick="location.reload()" class="exit-btn">Exit Session</button>
-        </div>
-    </div>
+        `).join('');
+    }
+}
 
-    <div id="mainUI">
-        <div class="container">
-            <div id="loginArea">
-                <input type="password" id="pswd" placeholder="System Key...">
-                <button onclick="verify()">Unlock</button>
-            </div>
+function downloadFile(i) {
+    const file = settings.stash[i];
+    const win = window.open();
+    win.document.write(`<iframe src="${file.data}" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe>`);
+}
 
-            <div id="dashboard" style="display:none;">
-                <div class="tab-bar">
-                    <button class="tab-btn active" onclick="openTab('core')">CORE</button>
-                    <button class="tab-btn" onclick="openTab('stash')">STASH</button>
-                    <button class="tab-btn" onclick="openTab('sys')">SYS</button>
-                </div>
+function deleteFile(i) { settings.stash.splice(i, 1); save(); renderStash(); }
 
-                <div id="core" class="tab-content active">
-                    <div class="section-title">Launcher & History</div>
-                    <div class="flex-gap">
-                        <input type="text" id="target" placeholder="https://..." style="flex:3;">
-                        <button onclick="launch()" class="success-btn" style="flex:1;">Launch</button>
-                    </div>
-                    <div id="historyList"></div>
-                    
-                    <div class="section-title">Vault <span id="saveStatus"></span></div>
-                    <textarea id="vaultNotes" oninput="saveVault()" placeholder="Secure notes..."></textarea>
-                </div>
+function saveVault() {
+    settings.vault = document.getElementById('vaultNotes').value;
+    const status = document.getElementById('saveStatus');
+    status.textContent = "• Saving...";
+    save();
+    setTimeout(() => status.textContent = "• Saved", 800);
+}
 
-                <div id="stash" class="tab-content">
-                    <div class="section-title">File Stash (Base64)</div>
-                    <div id="dropZone">Drag & Drop File Here</div>
-                    <div id="fileList"></div>
-                </div>
+// --- SYSTEM ---
 
-                <div id="sys" class="tab-content">
-                    <div class="section-title">Tab Identity</div>
-                    <input id="tabNameIn" placeholder="Tab Title" oninput="updateIdentity()">
-                    <input id="tabIconIn" placeholder="Favicon URL" oninput="updateIdentity()">
-                    
-                    <div class="section-title">Global</div>
-                    <label style="font-size: 0.7rem;"><input type="checkbox" id="restoreCheck" onchange="updateRestore()"> Restore Session on Login</label>
-                    <button onclick="toggleTheme()">Toggle Dark Mode</button>
-                    <button onclick="setPanicKey()" id="pkDisp">Set Panic Key</button>
-                    <button onclick="panicExport()" class="danger-btn">EXPORT & WIPE</button>
-                </div>
-            </div>
-        </div>
-    </div>
+function updateRestore() { 
+    settings.restoreSession = document.getElementById('restoreCheck').checked; 
+    save(); 
+}
 
-    <script src="script.js"></script>
-</body>
-</html>
+function save() { 
+    localStorage.setItem('cloaker_v60', JSON.stringify(settings)); 
+}
+
+function setPanicKey() {
+    const disp = document.getElementById('pkDisp');
+    disp.textContent = "Press any key...";
+    window.onkeydown = (e) => {
+        settings.panicKey = e.key;
+        disp.textContent = "Panic Key: " + e.key;
+        save();
+        window.onkeydown = null;
+    };
+}
+
+function panicExport() {
+    const blob = new Blob([JSON.stringify(settings)], {type: 'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'emergency_vault_v60.json';
+    a.click();
+    localStorage.clear();
+    window.location.replace("https://google.com");
+}
+
+function startTimer(mins) {
+    clearInterval(pomoInterval);
+    let time = mins * 60;
+    pomoInterval = setInterval(() => {
+        const m = Math.floor(time / 60);
+        const s = time % 60;
+        document.getElementById('pomoDisplay').textContent = `${m}:${s < 10 ? '0' : ''}${s}`;
+        if(time-- <= 0) clearInterval(pomoInterval);
+    }, 1000);
+}
