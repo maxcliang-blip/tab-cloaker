@@ -1,14 +1,14 @@
 let settings = { 
     vault: "", skin: "default", panicKey: "\\", panicUrl: "https://google.com",
     identity: { title: "404 Not Found" },
-    history: [], lastUrl: ""
+    history: [], ghostVault: false
 };
 
 let currentKey = "";
 let inputSeq = "";
 
 function init() {
-    const raw = localStorage.getItem('cloaker_v63');
+    const raw = localStorage.getItem('cloaker_v64');
     if(raw) settings = JSON.parse(raw);
     
     document.title = settings.identity.title;
@@ -16,8 +16,18 @@ function init() {
     document.getElementById('skinSelect').value = settings.skin;
     document.getElementById('tabNameIn').value = settings.identity.title;
     document.getElementById('panicUrlIn').value = settings.panicUrl;
+    document.getElementById('ghostToggle').checked = settings.ghostVault;
+    if(settings.ghostVault) document.getElementById('vaultNotes').classList.add('ghost-active');
     
     renderHistory();
+
+    window.onkeydown = (e) => {
+        // Hotkey: Ctrl+B for Blur
+        if(e.key.toLowerCase() === 'b' && (e.ctrlKey || e.metaKey)) {
+            e.preventDefault();
+            toggleBlur();
+        }
+    };
 
     window.onkeyup = (e) => {
         // Panic Redirect
@@ -25,7 +35,6 @@ function init() {
             window.location.replace(settings.panicUrl);
         }
         
-        // Sequence 'cloak' to show dashboard
         inputSeq += e.key.toLowerCase();
         if(inputSeq.endsWith("cloak")) {
             document.getElementById('shadow').style.display = 'none';
@@ -41,7 +50,7 @@ function verify() {
         document.getElementById('loginArea').style.display = 'none';
         document.getElementById('dashboard').style.display = 'block';
         decryptVault();
-    } else if(p === "planner") {
+    } else if(p === "301") {
         document.getElementById('mainUI').style.display = 'none';
         document.getElementById('decoyUI').style.display = 'block';
     }
@@ -65,9 +74,20 @@ function launch(url) {
         if(settings.history.length > 6) settings.history.pop();
     }
     save(); renderHistory();
-    
     const win = window.open('about:blank', '_blank');
     win.document.write(`<iframe src="${t}" style="width:100%;height:100%;border:none;position:fixed;inset:0;"></iframe>`);
+}
+
+function toggleGhostMode() {
+    settings.ghostVault = document.getElementById('ghostToggle').checked;
+    const vn = document.getElementById('vaultNotes');
+    settings.ghostVault ? vn.classList.add('ghost-active') : vn.classList.remove('ghost-active');
+    save();
+}
+
+function toggleBlur() {
+    const isBlurred = document.body.classList.toggle('blur-active');
+    document.getElementById('blurOverlay').style.display = isBlurred ? 'flex' : 'none';
 }
 
 function handleCmd() {
@@ -76,18 +96,10 @@ function handleCmd() {
     const cmd = input.value.trim().toLowerCase();
     input.value = '';
     out.innerHTML += `\n<span style="color:#666">$ ${cmd}</span>`;
-    
-    if(cmd === 'help') {
-        out.innerHTML += `\n- launch [url]\n- logs\n- clear\n- panic`;
-    } else if(cmd.startsWith('launch ')) {
-        launch(cmd.split(' ')[1]);
-    } else if(cmd === 'logs') {
-        out.innerHTML += `\n[${new Date().toLocaleTimeString()}] Secure Tunnel: Active\n[${new Date().toLocaleTimeString()}] Cache Scrub: Complete`;
-    } else if(cmd === 'clear') {
-        out.innerHTML = 'GhostOS v63.2 Ready...';
-    } else {
-        out.innerHTML += `\nCommand unknown.`;
-    }
+    if(cmd === 'help') out.innerHTML += `\n- launch [url]\n- logs\n- clear\n- blur`;
+    else if(cmd === 'blur') toggleBlur();
+    else if(cmd === 'clear') out.innerHTML = 'GhostOS v64 Ready...';
+    else out.innerHTML += `\nCommand unknown.`;
     out.scrollTop = out.scrollHeight;
 }
 
@@ -119,24 +131,20 @@ function decryptVault() {
         try {
             const bytes = CryptoJS.AES.decrypt(settings.vault, currentKey);
             document.getElementById('vaultNotes').value = bytes.toString(CryptoJS.enc.Utf8);
-        } catch(e) { console.warn("Lock active."); }
+        } catch(e) { console.warn("Vault locked."); }
     }
 }
 
 function renderHistory() {
     const list = document.getElementById('historyList');
-    if(list) list.innerHTML = settings.history.map(h => `
-        <div class="hist-item" onclick="launch('${h}')">
-            <span>${h.substring(0,45)}...</span>
-            <span style="opacity:0.4;">GO ↗</span>
-        </div>`).join('');
+    if(list) list.innerHTML = settings.history.map(h => `<div class="hist-item" onclick="launch('${h}')"><span>${h.substring(0,40)}...</span><span>GO ↗</span></div>`).join('');
 }
 
 function clearHistory() { if(confirm("Clear history?")) { settings.history = []; save(); renderHistory(); } }
 function updateSkin() { settings.skin = document.getElementById('skinSelect').value; document.body.setAttribute('data-skin', settings.skin); save(); }
 function updateIdentity() { settings.identity.title = document.getElementById('tabNameIn').value || "404 Not Found"; document.title = settings.identity.title; save(); }
 function updatePanicUrl() { settings.panicUrl = document.getElementById('panicUrlIn').value || "https://google.com"; save(); }
-function save() { localStorage.setItem('cloaker_v63', JSON.stringify(settings)); }
+function save() { localStorage.setItem('cloaker_v64', JSON.stringify(settings)); }
 function openTab(id) {
     document.querySelectorAll('.tab-content, .tab-btn').forEach(el => el.classList.remove('active'));
     document.getElementById(id).classList.add('active');

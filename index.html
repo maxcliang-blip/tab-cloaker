@@ -16,13 +16,17 @@
     </div>
 
     <div id="decoyUI" style="display:none;">
-        <div id="liveTicker"><span>SYSTEM STATUS: OPTIMAL // ENCRYPTION: AES-256 // SESSION: SECURE...</span></div>
+        <div id="liveTicker"><span>UNIVERSITY PORTAL // COURSE: CS301 DATA STRUCTURES // ASMT_STATUS: SUBMITTED...</span></div>
         <div class="decoy-container">
-            <h1>Academic Workspace</h1>
-            <div class="decoy-card">
-                <h1 id="pomoDisplay">25:00</h1>
-                <button onclick="location.reload()">Resume Study</button>
+            <h2 style="color:#2c3e50; margin-bottom: 5px;">Course Resources: CS301</h2>
+            <p style="font-size: 0.7rem; color: #7f8c8d; margin-bottom: 20px;">Authenticated Session: s_user_88291</p>
+            <div class="resource-list">
+                <div class="res-item" onclick="alert('Downloading: Lecture_Notes_Week_7.pdf...')">📄 Lecture_Notes_Week_7.pdf</div>
+                <div class="res-item" onclick="alert('Opening: Syllabus_Spring_2026.pdf...')">📄 Syllabus_Spring_2026.pdf</div>
+                <div class="res-item" onclick="alert('Opening: Midterm_Review_Guide.pdf...')">📄 Midterm_Review_Guide.pdf</div>
+                <div class="res-item" onclick="alert('Accessing: Supplemental_Reading_List.txt...')">📄 Supplemental_Reading.txt</div>
             </div>
+            <button onclick="location.reload()" class="exit-btn">Sign Out</button>
         </div>
     </div>
 
@@ -59,12 +63,17 @@
                     </div>
                     <div id="historyList" class="history-container"></div>
                     
-                    <div class="section-title">Encrypted Vault</div>
+                    <div class="section-title" style="display:flex; justify-content:space-between;">
+                        <span>Encrypted Vault</span>
+                        <label style="font-size:0.5rem; cursor:pointer; color:var(--accent);">
+                            <input type="checkbox" id="ghostToggle" onchange="toggleGhostMode()"> GHOST MODE
+                        </label>
+                    </div>
                     <textarea id="vaultNotes" oninput="saveVault()" placeholder="Auto-encrypting notes..."></textarea>
                 </div>
 
                 <div id="term" class="tab-content">
-                    <div id="terminalOutput">GhostOS v63.2 Ready...</div>
+                    <div id="terminalOutput">GhostOS v64 Ready...</div>
                     <div class="terminal-input-line">
                         <span>$</span>
                         <input id="termInput" autocomplete="off" onkeydown="if(event.key==='Enter')handleCmd()">
@@ -90,6 +99,7 @@
                     
                     <div class="section-title">Panic Settings</div>
                     <input id="panicUrlIn" placeholder="Panic Redirect URL" oninput="updatePanicUrl()">
+                    <p style="font-size:0.55rem; color:#888;">Hotkeys: [ \ ] Panic | [ Ctrl+B ] Blur</p>
                     
                     <button onclick="panicExport()" class="danger-btn" style="margin-top:20px;">WIPE ALL DATA</button>
                 </div>
@@ -103,6 +113,10 @@
                 <iframe id="frameRight"></iframe>
             </div>
         </div>
+    </div>
+
+    <div id="blurOverlay" onclick="toggleBlur()" style="display:none;">
+        <div style="background:rgba(0,0,0,0.6); padding:20px; border-radius:10px;">SYSTEM PAUSED</div>
     </div>
 
     <script src="script.js"></script>
