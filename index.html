@@ -11,17 +11,17 @@
 <body onload="init()" data-skin="default">
 
     <div id="shadow">
-        <h1 id="error404">Error 404</h1>
+        <h1 id="error404">404</h1>
         <p>The requested URL was not found on this server.</p>
     </div>
 
     <div id="decoyUI" style="display:none;">
-        <div id="liveTicker"><span>SYSTEM STATUS: OPTIMAL // ENCRYPTION: ACTIVE // LOGGING: ENABLED...</span></div>
+        <div id="liveTicker"><span>SYSTEM STATUS: OPTIMAL // ENCRYPTION: AES-256 // SESSION: SECURE...</span></div>
         <div class="decoy-container">
-            <h1 id="decoyMainTitle">Academic Workspace</h1>
+            <h1>Academic Workspace</h1>
             <div class="decoy-card">
                 <h1 id="pomoDisplay">25:00</h1>
-                <button onclick="location.reload()">Return to Session</button>
+                <button onclick="location.reload()">Resume Study</button>
             </div>
         </div>
     </div>
@@ -43,23 +43,29 @@
 
                 <div id="core" class="tab-content active">
                     <div class="section-title">Ghost Launcher</div>
-                    <div class="flex-gap">
-                        <input type="text" id="target" placeholder="https://..." style="flex:2;">
-                        <select id="stealthMode" style="flex:1;">
+                    <div class="launcher-grid">
+                        <input type="text" id="target" placeholder="https://...">
+                        <select id="stealthMode">
                             <option value="direct">Direct</option>
                             <option value="null">Null-Ref</option>
                             <option value="proxy">Proxy</option>
                         </select>
                         <button onclick="launch()" class="success-btn">Go</button>
                     </div>
-                    <div id="historyList"></div>
+                    
+                    <div class="section-title" style="display:flex; justify-content:space-between;">
+                        <span>Recent Sessions</span>
+                        <span onclick="clearHistory()" style="cursor:pointer; color:var(--danger); font-size:0.5rem;">[ WIPE ]</span>
+                    </div>
+                    <div id="historyList" class="history-container"></div>
+                    
                     <div class="section-title">Encrypted Vault</div>
-                    <textarea id="vaultNotes" oninput="saveVault()" placeholder="Sensitive data..."></textarea>
+                    <textarea id="vaultNotes" oninput="saveVault()" placeholder="Auto-encrypting notes..."></textarea>
                 </div>
 
                 <div id="term" class="tab-content">
-                    <div id="terminalOutput">GhostOS v63.1 Ready... Type 'help' or 'logs'</div>
-                    <div class="flex-gap terminal-input-line">
+                    <div id="terminalOutput">GhostOS v63.2 Ready...</div>
+                    <div class="terminal-input-line">
                         <span>$</span>
                         <input id="termInput" autocomplete="off" onkeydown="if(event.key==='Enter')handleCmd()">
                     </div>
@@ -67,9 +73,9 @@
 
                 <div id="mirror" class="tab-content">
                     <div class="section-title">Split-View Mirroring</div>
-                    <input id="m1" placeholder="Left URL (e.g., Coursera)">
-                    <input id="m2" placeholder="Right URL (e.g., Research)">
-                    <button onclick="buildMirror()">Initialize Split View</button>
+                    <input id="m1" placeholder="Left Side URL">
+                    <input id="m2" placeholder="Right Side URL">
+                    <button onclick="buildMirror()">Initialize Split</button>
                 </div>
 
                 <div id="sys" class="tab-content">
@@ -80,9 +86,12 @@
                         <option value="discord">Discord</option>
                         <option value="canvas">Canvas</option>
                     </select>
-                    <input id="tabNameIn" placeholder="New Tab Title" oninput="updateIdentity()">
-                    <div class="section-title">Emergency</div>
-                    <button onclick="panicExport()" class="danger-btn">WIPE ALL DATA</button>
+                    <input id="tabNameIn" placeholder="Tab Title" oninput="updateIdentity()">
+                    
+                    <div class="section-title">Panic Settings</div>
+                    <input id="panicUrlIn" placeholder="Panic Redirect URL" oninput="updatePanicUrl()">
+                    
+                    <button onclick="panicExport()" class="danger-btn" style="margin-top:20px;">WIPE ALL DATA</button>
                 </div>
             </div>
         </div>
