@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title id="tabTitle">404 Not Found</title>
-    <link id="tabIcon" rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=">
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 </head>
@@ -15,19 +14,6 @@
         <p>The requested URL was not found on this server.</p>
         <hr>
         <address>Apache/2.4.41 (Ubuntu) Server at localhost Port 80</address>
-    </div>
-
-    <div id="decoyUI" style="display:none;">
-        <div id="liveTicker"><span>PORTAL // CS301 DATA STRUCTURES // ASMT_STATUS: SUBMITTED...</span></div>
-        <div class="decoy-container">
-            <h2 style="color:#2c3e50;">Course Resources: CS301</h2>
-            <div class="resource-list">
-                <div class="res-item" onclick="alert('Downloading...')">📄 Lecture_Notes_Week_7.pdf</div>
-                <div class="res-item" onclick="alert('Opening...')">📄 Syllabus_Spring_2026.pdf</div>
-                <div class="res-item" onclick="alert('Opening...')">📄 Midterm_Review_Guide.pdf</div>
-            </div>
-            <button onclick="location.reload()" class="exit-btn">Sign Out</button>
-        </div>
     </div>
 
     <div id="mainUI" style="opacity:0;">
@@ -41,82 +27,53 @@
                 <div class="tab-bar">
                     <button class="tab-btn active" onclick="openTab('core')">CORE</button>
                     <button class="tab-btn" onclick="openTab('term')">TERM</button>
-                    <button class="tab-btn" onclick="openTab('mirror')">MIRROR</button>
                     <button class="tab-btn" onclick="openTab('sys')">SYS</button>
                 </div>
 
                 <div id="core" class="tab-content active">
-                    <div class="section-title">Launcher & Cammo</div>
+                    <div class="section-title">Phantom Launcher</div>
                     <div class="launcher-grid">
-                        <input type="text" id="target" placeholder="https://...">
-                        <select id="stealthMode">
-                            <option value="direct">Direct</option>
-                            <option value="null">Null-Ref</option>
-                        </select>
+                        <input type="text" id="target" placeholder="Target URL...">
                         <button onclick="launch()" class="success-btn">Go</button>
                     </div>
                     
-                    <select id="cammoSelect">
-                        <option value="none">Skin: Original</option>
-                        <option value="wiki">Skin: Wikipedia</option>
-                        <option value="docs">Skin: Google Docs</option>
-                        <option value="canvas">Skin: Canvas LMS</option>
-                    </select>
+                    <div class="section-title">Shadow Print</div>
+                    <button onclick="shadowPrint()" style="background:#666; font-size:0.6rem;">Generate Decoy Paperwork</button>
 
-                    <div class="section-title">Shadow Bookmarks <span onclick="addBookmark()" style="float:right; cursor:pointer;">[+]</span></div>
-                    <div id="bookmarkList" class="history-container"></div>
-                    
                     <div class="section-title">Encrypted Vault</div>
                     <textarea id="vaultNotes" oninput="saveVault()" placeholder="Auto-encrypting..."></textarea>
                 </div>
 
                 <div id="term" class="tab-content">
-                    <canvas id="integrityGraph" width="400" height="50"></canvas>
-                    <div id="terminalOutput">GhostOS v67.0 System Online...</div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                        <canvas id="integrityGraph" width="300" height="40"></canvas>
+                        <div id="netHeartbeat" title="Network Load Monitor"></div>
+                    </div>
+                    <div id="terminalOutput">GhostOS v68.0 Phantom Link Online...</div>
                     <div class="terminal-input-line">
                         <span>$</span><input id="termInput" autocomplete="off" onkeydown="if(event.key==='Enter')handleCmd()">
                     </div>
                 </div>
 
-                <div id="mirror" class="tab-content">
-                    <div class="section-title">Split Mirror</div>
-                    <input id="m1" placeholder="Left URL">
-                    <input id="m2" placeholder="Right URL">
-                    <button onclick="buildMirror()">Initialize</button>
-                </div>
-
                 <div id="sys" class="tab-content">
-                    <div class="section-title">Identity</div>
-                    <select id="skinSelect" onchange="updateSkin()">
-                        <option value="default">Default</option>
-                        <option value="outlook">Outlook</option>
-                        <option value="discord">Discord</option>
-                    </select>
+                    <div class="section-title">Phantom Protocols</div>
+                    <label class="switch-label">
+                        <input type="checkbox" id="autoSwitchToggle" onchange="toggleAutoSwitch()"> Auto-Panic on Tab Switch
+                    </label>
+                    <label class="switch-label">
+                        <input type="checkbox" id="focusBlurToggle" onchange="toggleFocusBlur()"> Focus-Aware Blur
+                    </label>
                     
                     <div class="section-title">Panic / Dead Man</div>
-                    <input id="panicUrlIn" placeholder="Panic Redirect" oninput="updatePanicUrl()">
-                    <div style="display:flex; gap:5px; align-items:center;">
+                    <input id="panicUrlIn" placeholder="Panic Redirect URL" oninput="updatePanicUrl()">
+                    <div style="display:flex; gap:5px;">
                         <input type="number" id="dmTimer" placeholder="Min" style="width:60px;">
-                        <button onclick="startDeadMan()" style="font-size:0.6rem;">Arm DM</button>
+                        <button onclick="startDeadMan()">Arm DM</button>
                     </div>
+                    <p id="dmStatus" style="font-size:0.5rem; color:#888;">Status: Inactive</p>
 
-                    <div class="section-title">Sentinel AI</div>
-                    <label style="font-size:0.6rem;"><input type="checkbox" id="sentinelToggle" onchange="toggleSentinel()"> Enable Auto-Blur</label>
-                    <video id="sentinelFeed" style="display:none;" autoplay playsinline></video>
-
-                    <button onclick="panicExport()" class="danger-btn" style="margin-top:20px;">Wipe Session</button>
+                    <button onclick="panicExport()" class="danger-btn" style="margin-top:20px;">Wipe All Data</button>
                 </div>
-            </div>
-        </div>
-
-        <div id="mirrorView" style="display:none;">
-            <div class="mirror-bar">
-                <button onclick="toggleGrayscale()" style="background:#444;">B/W</button>
-                <button onclick="closeMirror()" style="background:var(--danger);">X</button>
-            </div>
-            <div id="mirrorWrapper" class="mirror-grid">
-                <iframe id="frameLeft"></iframe>
-                <iframe id="frameRight"></iframe>
             </div>
         </div>
     </div>

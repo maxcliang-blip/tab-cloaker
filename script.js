@@ -1,94 +1,100 @@
-let settings = { vault: "", skin: "default", panicKey: "\\", panicUrl: "https://google.com", history: [], bookmarks: [], dmActive: false };
-let currentKey = "", inputSeq = "", dmTimeout = null, essayIndex = 0;
-const fakeEssay = "Advanced Data Structures: Binary Trees and Temporal Complexity Analysis. In O(log n) environments, resource allocation is prioritized through recursive traversal...";
+let settings = { vault: "", panicUrl: "https://google.com", dmActive: false, autoSwitch: false, focusBlur: false };
+let dmTimeout = null, inputSeq = "", currentKey = "";
 
 function init() {
-    const raw = localStorage.getItem('cloaker_v67');
+    const raw = localStorage.getItem('ghost_v68');
     if(raw) settings = JSON.parse(raw);
-    document.body.setAttribute('data-skin', settings.skin);
-    startFakeLogs();
-    drawGraph();
 
-    window.onkeydown = (e) => {
-        if(settings.dmActive) resetDeadMan();
-        if(e.key.toLowerCase() === 'b' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); toggleBlur(); }
-        if(document.getElementById('decoyUI').style.display === 'block') {
-            document.getElementById('liveTicker').innerHTML = `<span>${fakeEssay.substring(0, essayIndex)}|</span>`;
-            essayIndex += 4; if(essayIndex > fakeEssay.length) essayIndex = 0;
+    // 1. Contextual Auto-Switcher
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden && settings.autoSwitch) {
+            window.location.replace(settings.panicUrl); 
         }
-    };
+    });
+
+    // 2. Focus-Aware Blur
+    window.onblur = () => { if(settings.focusBlur) toggleBlur(true); };
+    window.onfocus = () => { if(settings.focusBlur) toggleBlur(false); };
+
+    // 3. Network Heartbeat Simulation
+    setInterval(() => {
+        const hb = document.getElementById('netHeartbeat');
+        if(!hb) return;
+        const load = Math.random();
+        hb.style.background = load > 0.8 ? '#f00' : load > 0.5 ? '#ff0' : '#0f0';
+        hb.style.boxShadow = `0 0 8px ${hb.style.background}`;
+    }, 2500);
+
+    drawGraph();
+    
     window.onkeyup = (e) => {
-        if(e.key === settings.panicKey) window.location.replace(settings.panicUrl);
+        if(e.key === "\\") window.location.replace(settings.panicUrl);
         inputSeq += e.key.toLowerCase();
-        if(inputSeq.endsWith("cloak")) { 
-            document.getElementById('shadow').style.display = 'none'; 
-            document.getElementById('mainUI').style.opacity = '1'; 
+        if(inputSeq.endsWith("cloak")) {
+            document.getElementById('shadow').style.display = 'none';
+            document.getElementById('mainUI').style.opacity = '1';
         }
     };
 }
 
 function verify() {
     const p = document.getElementById('pswd').value;
-    if(p === "1234") { 
-        currentKey = p; 
-        document.getElementById('loginArea').style.display = 'none'; 
-        document.getElementById('dashboard').style.display = 'block'; 
-        decryptVault(); renderBookmarks();
-    } else if(p === "301") { 
-        document.getElementById('mainUI').style.display = 'none'; 
-        document.getElementById('decoyUI').style.display = 'block'; 
+    if(p === "1234") {
+        currentKey = p;
+        document.getElementById('loginArea').style.display = 'none';
+        document.getElementById('dashboard').style.display = 'block';
+        if(settings.vault) decryptVault();
     }
 }
 
-function launch() {
-    const url = document.getElementById('target').value;
-    const cammo = document.getElementById('cammoSelect').value;
-    const win = window.open('about:blank', '_blank');
-    win.document.write(`<html><head><style>
-        body { margin: 0; background: ${cammo==='wiki'?'#f6f6f6':cammo==='docs'?'#eee':'#fff'}; 
-        ${cammo==='wiki'?'border-left: 160px solid #eee;':''} ${cammo==='docs'?'padding: 50px;':''} }
-        iframe { width: 100%; height: 100%; border: none; ${cammo==='docs'?'box-shadow: 0 0 15px rgba(0,0,0,0.2);':''} }
-    </style></head><body><iframe src="${url}"></iframe></body></html>`);
+// 4. Shadow Print (Decoy PDF)
+function shadowPrint() {
+    const decoyContent = "<h1>CS301 Final Review: Temporal Complexity</h1><p>Algorithm efficiency is measured in O-notation. For Binary Search Trees, average temporal complexity remains O(log n)...</p>";
+    const win = window.open('', '_blank');
+    win.document.write(`<html><body style="font-family:serif; padding:50px;">${decoyContent}</body></html>`);
+    win.document.close();
+    win.print();
+    win.close();
 }
 
-function buildMirror() {
-    const cammo = document.getElementById('cammoSelect').value;
-    const wrap = document.getElementById('mirrorWrapper');
-    wrap.className = "mirror-grid " + (cammo !== 'none' ? 'cammo-' + cammo : '');
-    document.getElementById('frameLeft').src = document.getElementById('m1').value;
-    document.getElementById('frameRight').src = document.getElementById('m2').value;
-    document.getElementById('mainContainer').style.display = 'none';
-    document.getElementById('mirrorView').style.display = 'flex';
-}
-
-function toggleGrayscale() {
-    const grid = document.getElementById('mirrorWrapper');
-    grid.style.filter = grid.style.filter.includes('grayscale') ? 'none' : 'grayscale(100%)';
-}
-
-function closeMirror() { document.getElementById('mirrorView').style.display = 'none'; document.getElementById('mainContainer').style.display = 'block'; }
-function toggleBlur() { const b = document.body.classList.toggle('blur-active'); document.getElementById('blurOverlay').style.display = b ? 'flex' : 'none'; }
-function saveVault() { if(currentKey) { settings.vault = CryptoJS.AES.encrypt(document.getElementById('vaultNotes').value, currentKey).toString(); save(); } }
-function decryptVault() { if(settings.vault && currentKey) { try { document.getElementById('vaultNotes').value = CryptoJS.AES.decrypt(settings.vault, currentKey).toString(CryptoJS.enc.Utf8); } catch(e){} } }
-
-function startDeadMan() { settings.dmActive = true; resetDeadMan(); document.getElementById('dmStatus').innerText = "Armed"; document.getElementById('dmStatus').style.color = "var(--danger)"; }
-function resetDeadMan() { clearTimeout(dmTimeout); const ms = document.getElementById('dmTimer').value * 60000; dmTimeout = setTimeout(() => window.location.replace(settings.panicUrl), ms); }
+function toggleAutoSwitch() { settings.autoSwitch = document.getElementById('autoSwitchToggle').checked; save(); }
+function toggleFocusBlur() { settings.focusBlur = document.getElementById('focusBlurToggle').checked; save(); }
 
 function drawGraph() {
     const ctx = document.getElementById('integrityGraph').getContext('2d');
-    let p = Array(50).fill(20);
+    let points = Array(40).fill(20);
     setInterval(() => {
-        p.shift(); p.push(Math.random()*30 + 5);
-        ctx.clearRect(0,0,400,50); ctx.beginPath(); ctx.strokeStyle='#0f0'; ctx.lineWidth=1;
-        p.forEach((v,i) => ctx.lineTo(i*8, v)); ctx.stroke();
+        points.shift(); points.push(Math.random() * 30 + 5);
+        ctx.clearRect(0,0,300,40);
+        ctx.beginPath(); ctx.strokeStyle = '#0f0'; ctx.lineWidth = 1;
+        points.forEach((v, i) => ctx.lineTo(i * 7.5, v));
+        ctx.stroke();
     }, 150);
 }
 
-function startFakeLogs() { setInterval(() => { if(document.getElementById('shadow').style.display !== 'none') console.error(`GET ${window.location.origin}/favicon.ico 404 (Not Found)`); }, 8000); }
-function updateSkin() { settings.skin = document.getElementById('skinSelect').value; document.body.setAttribute('data-skin', settings.skin); save(); }
-function updatePanicUrl() { settings.panicUrl = document.getElementById('panicUrlIn').value || "https://google.com"; save(); }
-function save() { localStorage.setItem('cloaker_v67', JSON.stringify(settings)); }
+function toggleBlur(force) {
+    const isBlurred = force !== undefined ? force : !document.body.classList.contains('blur-active');
+    document.body.classList.toggle('blur-active', isBlurred);
+    document.getElementById('blurOverlay').style.display = isBlurred ? 'flex' : 'none';
+}
+
+function startDeadMan() {
+    const mins = document.getElementById('dmTimer').value;
+    if(!mins) return;
+    settings.dmActive = true;
+    resetDeadMan();
+    document.getElementById('dmStatus').innerText = "Armed: Panic in " + mins + "m";
+}
+
+function resetDeadMan() {
+    if(!settings.dmActive) return;
+    clearTimeout(dmTimeout);
+    dmTimeout = setTimeout(() => window.location.replace(settings.panicUrl), document.getElementById('dmTimer').value * 60000);
+}
+
+function saveVault() { if(currentKey) { settings.vault = CryptoJS.AES.encrypt(document.getElementById('vaultNotes').value, currentKey).toString(); save(); } }
+function decryptVault() { try { document.getElementById('vaultNotes').value = CryptoJS.AES.decrypt(settings.vault, currentKey).toString(CryptoJS.enc.Utf8); } catch(e){} }
+function save() { localStorage.setItem('ghost_v68', JSON.stringify(settings)); }
 function openTab(id) { document.querySelectorAll('.tab-content, .tab-btn').forEach(el => el.classList.remove('active')); document.getElementById(id).classList.add('active'); if(event) event.currentTarget.classList.add('active'); }
+function updatePanicUrl() { settings.panicUrl = document.getElementById('panicUrlIn').value || "https://google.com"; save(); }
 function panicExport() { localStorage.clear(); window.location.reload(); }
-function addBookmark() { /* Logic for adding encrypted URLs */ }
-function renderBookmarks() { /* Implementation for UI display */ }
