@@ -11,8 +11,10 @@
 <body onload="init()" data-skin="default">
 
     <div id="shadow">
-        <h1 id="error404">404</h1>
+        <h1>Not Found</h1>
         <p>The requested URL was not found on this server.</p>
+        <hr>
+        <address>Apache/2.4.41 (Ubuntu) Server at localhost Port 80</address>
     </div>
 
     <div id="decoyUI" style="display:none;">
@@ -69,11 +71,11 @@
                             <input type="checkbox" id="ghostToggle" onchange="toggleGhostMode()"> GHOST MODE
                         </label>
                     </div>
-                    <textarea id="vaultNotes" oninput="saveVault()" placeholder="Auto-encrypting notes..."></textarea>
+                    <textarea id="vaultNotes" oninput="saveVault()" placeholder="Auto-encrypting..."></textarea>
                 </div>
 
                 <div id="term" class="tab-content">
-                    <div id="terminalOutput">GhostOS v64 Ready...</div>
+                    <div id="terminalOutput">GhostOS v65.1 Ready...</div>
                     <div class="terminal-input-line">
                         <span>$</span>
                         <input id="termInput" autocomplete="off" onkeydown="if(event.key==='Enter')handleCmd()">
@@ -99,8 +101,14 @@
                     
                     <div class="section-title">Panic Settings</div>
                     <input id="panicUrlIn" placeholder="Panic Redirect URL" oninput="updatePanicUrl()">
-                    <p style="font-size:0.55rem; color:#888;">Hotkeys: [ \ ] Panic | [ Ctrl+B ] Blur</p>
                     
+                    <div class="section-title">Sentinel AI (Beta)</div>
+                    <label style="font-size:0.6rem; cursor:pointer; display:flex; align-items:center; gap:5px;">
+                        <input type="checkbox" id="sentinelToggle" onchange="toggleSentinel()"> ENABLE AUTO-BLUR (CAM)
+                    </label>
+                    <p id="sentinelStatus" style="font-size:0.5rem; color:#888; margin-top:5px;">Camera: Standby</p>
+                    <video id="sentinelFeed" style="display:none;" autoplay playsinline></video>
+
                     <button onclick="panicExport()" class="danger-btn" style="margin-top:20px;">WIPE ALL DATA</button>
                 </div>
             </div>
@@ -116,7 +124,7 @@
     </div>
 
     <div id="blurOverlay" onclick="toggleBlur()" style="display:none;">
-        <div style="background:rgba(0,0,0,0.6); padding:20px; border-radius:10px;">SYSTEM PAUSED</div>
+        <div style="background:rgba(0,0,0,0.8); padding:20px; border-radius:10px; color:white;">SYSTEM PAUSED</div>
     </div>
 
     <script src="script.js"></script>

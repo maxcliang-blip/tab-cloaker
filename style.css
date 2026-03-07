@@ -10,17 +10,22 @@ body[data-skin="canvas"] { --bg-main: #fff; --text-main: #2d3b45; --panel-bg: #f
 
 body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg-main); color: var(--text-main); height: 100vh; overflow: hidden; display: flex; align-items: center; justify-content: center; transition: 0.3s; }
 
+/* Legit 404 Styling */
+#shadow { all: initial; display: block; padding: 20px; font-family: "Times New Roman", Times, serif; color: #000; text-align: left; background: #fff; width: 100vw; height: 100vh; position: fixed; top: 0; left: 0; z-index: 1; }
+#shadow h1 { font-size: 2em; margin-bottom: 0.5em; }
+#shadow hr { border: 0; border-top: 1px solid #ccc; margin: 1em 0; }
+#shadow address { font-style: italic; font-size: 0.9em; }
+
 /* Ghost Vault */
 textarea#vaultNotes.ghost-active { color: transparent !important; caret-color: var(--text-main); }
 textarea#vaultNotes.ghost-active::selection { background: var(--accent); color: #fff; }
 
 /* Blur Protocol */
-.blur-active iframe, .blur-active .mirror-grid, .blur-active .container { filter: blur(20px) grayscale(100%); pointer-events: none; }
-#blurOverlay { position: fixed; inset: 0; z-index: 9999; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; cursor: pointer; backdrop-filter: blur(5px); }
+.blur-active iframe, .blur-active .mirror-grid, .blur-active .container { filter: blur(25px) grayscale(100%); pointer-events: none; }
+#blurOverlay { position: fixed; inset: 0; z-index: 9999; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
 
-#shadow { text-align: center; user-select: none; }
-#mainUI { width: 100%; display: flex; justify-content: center; transition: opacity 0.5s; }
-.container { background: var(--panel-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--panel-border); width: 480px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); z-index: 100; transition: filter 0.3s; }
+#mainUI { width: 100%; display: flex; justify-content: center; transition: opacity 0.5s; z-index: 100; }
+.container { background: var(--panel-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--panel-border); width: 480px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); transition: filter 0.3s; }
 
 .tab-bar { display: flex; gap: 5px; margin-bottom: 15px; }
 .tab-btn { flex: 1; padding: 8px; border: none; background: #444; color: #fff; cursor: pointer; border-radius: 4px; font-size: 0.65rem; }
@@ -38,19 +43,19 @@ button { width: 100%; padding: 10px; background: var(--accent); color: white; bo
 #term { background: #000; border-radius: 6px; padding: 15px; }
 #terminalOutput { height: 180px; overflow-y: auto; color: #0f0; font-family: monospace; font-size: 0.75rem; white-space: pre-wrap; }
 .terminal-input-line { display: flex; color: #0f0; align-items: center; gap: 5px; }
-#termInput { background: transparent; border: none; color: #fff; margin: 0; padding: 0; }
+#termInput { background: transparent; border: none; color: #fff; margin: 0; padding: 0; outline: none; }
 
 #mirrorView { position: fixed; inset: 0; background: #000; z-index: 1000; flex-direction: column; }
 .mirror-bar { background: #111; padding: 5px; display: flex; justify-content: flex-end; }
 .mirror-bar button { width: auto; background: var(--danger); font-size: 0.6rem; }
 .mirror-grid { display: grid; grid-template-columns: 1fr 1fr; height: 100%; gap: 1px; }
 
-/* Decoy Resource List */
-.decoy-container { max-width: 500px; margin: auto; padding-top: 50px; text-align: left; }
-.resource-list { background: #fff; border: 1px solid #ddd; border-radius: 8px; margin: 20px 0; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-.res-item { padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; color: #34495e; font-size: 0.85rem; transition: background 0.2s; }
-.res-item:hover { background: #f8f9fa; color: #1a73e8; }
-.res-item:last-child { border-bottom: none; }
-.exit-btn { background: #95a5a6; }
+/* Decoy UI */
+#decoyUI { all: unset; position: fixed; inset: 0; background: #fff; z-index: 101; display: none; font-family: sans-serif; }
+.decoy-container { max-width: 600px; margin: 50px auto; padding: 20px; }
+.resource-list { background: #fff; border: 1px solid #ddd; border-radius: 8px; margin: 20px 0; }
+.res-item { padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; color: #34495e; }
+.res-item:hover { background: #f8f9fa; }
+.exit-btn { background: #bdc3c7; color: #333; }
 .section-title { font-size: 0.6rem; color: #888; text-transform: uppercase; margin-top: 12px; border-bottom: 1px solid var(--panel-border); padding-bottom: 2px; }
 .danger-btn { background: var(--danger); }
