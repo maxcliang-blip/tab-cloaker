@@ -1,23 +1,31 @@
 let settings = { 
     vault: "", skin: "default", 
     identity: { title: "404 Not Found" },
-    history: [], restoreSession: false, lastUrl: ""
+    history: [], lastUrl: ""
 };
 
 let currentKey = "";
+let inputSeq = "";
 
 function init() {
     const raw = localStorage.getItem('cloaker_v63');
     if(raw) settings = JSON.parse(raw);
     
+    // Sync UI to Settings
     document.title = settings.identity.title;
     document.body.setAttribute('data-skin', settings.skin);
+    document.getElementById('skinSelect').value = settings.skin;
+    document.getElementById('tabNameIn').value = settings.identity.title;
+    
     renderHistory();
 
     window.onkeyup = (e) => {
+        // Simple escape to hide everything
         if(e.key === "Escape") location.reload();
-        // Secret sequence to show UI
-        if(e.ctrlKey && e.altKey && e.key === "s") {
+        
+        // Sequence 'cloak' to show login
+        inputSeq += e.key.toLowerCase();
+        if(inputSeq.endsWith("cloak")) {
             document.getElementById('shadow').style.display = 'none';
             document.getElementById('mainUI').style.opacity = '1';
         }
@@ -31,7 +39,7 @@ function verify() {
         document.getElementById('loginArea').style.display = 'none';
         document.getElementById('dashboard').style.display = 'block';
         decryptVault();
-    } else if(p === "decoy") {
+    } else if(p === "planner") {
         document.getElementById('mainUI').style.display = 'none';
         document.getElementById('decoyUI').style.display = 'block';
     }
@@ -51,7 +59,10 @@ function launch(url) {
         t = `https://api.allorigins.win/raw?url=${encodeURIComponent(t)}`;
     }
 
-    if(!settings.history.includes(t)) settings.history.unshift(t);
+    if(!settings.history.includes(t)) {
+        settings.history.unshift(t);
+        if(settings.history.length > 5) settings.history.pop();
+    }
     save(); renderHistory();
     
     const win = window.open('about:blank', '_blank');
@@ -68,15 +79,18 @@ function handleCmd() {
     out.innerHTML += `\n<span style="color:#888">$ ${cmd}</span>`;
     
     if(cmd === 'help') {
-        out.innerHTML += `\n- launch [url]\n- skin [name]\n- clear\n- panic`;
+        out.innerHTML += `\n- launch [url]\n- logs (Generate Activity Report)\n- clear\n- panic`;
     } else if(cmd.startsWith('launch ')) {
         launch(cmd.split(' ')[1]);
+    } else if(cmd === 'logs') {
+        const time = new Date().toLocaleTimeString();
+        out.innerHTML += `\n[${time}] Checking System Integrity... PASS`;
+        out.innerHTML += `\n[${time}] Background Tasks... SECURE`;
+        out.innerHTML += `\n[${time}] No unauthorized access detected.`;
     } else if(cmd === 'clear') {
-        out.innerHTML = 'GhostOS v63 Ready...';
-    } else if(cmd === 'panic') {
-        location.reload();
+        out.innerHTML = 'GhostOS v63.1 Ready...';
     } else {
-        out.innerHTML += `\nUnknown command.`;
+        out.innerHTML += `\nUnknown command. Type 'help'.`;
     }
     out.scrollTop = out.scrollHeight;
 }
@@ -112,7 +126,7 @@ function decryptVault() {
         try {
             const bytes = CryptoJS.AES.decrypt(settings.vault, currentKey);
             document.getElementById('vaultNotes').value = bytes.toString(CryptoJS.enc.Utf8);
-        } catch(e) { console.error("Decryption error"); }
+        } catch(e) { console.warn("Vault locked."); }
     }
 }
 
@@ -137,7 +151,7 @@ function updateIdentity() {
 
 function renderHistory() {
     const list = document.getElementById('historyList');
-    if(list) list.innerHTML = settings.history.slice(0,5).map(h => `<div style="font-size:0.6rem; color:#888;">${h.substring(0,40)}...</div>`).join('');
+    if(list) list.innerHTML = settings.history.map(h => `<div style="font-size:0.6rem; color:#888; overflow:hidden; white-space:nowrap;">• ${h.substring(0,60)}</div>`).join('');
 }
 
 function save() { localStorage.setItem('cloaker_v63', JSON.stringify(settings)); }

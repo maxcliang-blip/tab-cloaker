@@ -15,18 +15,18 @@
         <p>The requested URL was not found on this server.</p>
     </div>
 
-    <div id="decoyUI">
-        <div id="liveTicker"><span>SYSTEM STATUS: OPTIMAL // ENCRYPTION: ACTIVE // HEARTBEAT: STABLE...</span></div>
+    <div id="decoyUI" style="display:none;">
+        <div id="liveTicker"><span>SYSTEM STATUS: OPTIMAL // ENCRYPTION: ACTIVE // LOGGING: ENABLED...</span></div>
         <div class="decoy-container">
-            <h1 id="decoyMainTitle">Semester Study Planner</h1>
+            <h1 id="decoyMainTitle">Academic Workspace</h1>
             <div class="decoy-card">
-                <h1>25:00</h1>
-                <button onclick="location.reload()">Exit Session</button>
+                <h1 id="pomoDisplay">25:00</h1>
+                <button onclick="location.reload()">Return to Session</button>
             </div>
         </div>
     </div>
 
-    <div id="mainUI">
+    <div id="mainUI" style="opacity:0;">
         <div class="container" id="mainContainer">
             <div id="loginArea">
                 <input type="password" id="pswd" placeholder="System Key...">
@@ -53,11 +53,12 @@
                         <button onclick="launch()" class="success-btn">Go</button>
                     </div>
                     <div id="historyList"></div>
-                    <textarea id="vaultNotes" oninput="saveVault()" placeholder="Encrypted Vault..."></textarea>
+                    <div class="section-title">Encrypted Vault</div>
+                    <textarea id="vaultNotes" oninput="saveVault()" placeholder="Sensitive data..."></textarea>
                 </div>
 
                 <div id="term" class="tab-content">
-                    <div id="terminalOutput">GhostOS v63 Ready... Type 'help' for commands.</div>
+                    <div id="terminalOutput">GhostOS v63.1 Ready... Type 'help' or 'logs'</div>
                     <div class="flex-gap terminal-input-line">
                         <span>$</span>
                         <input id="termInput" autocomplete="off" onkeydown="if(event.key==='Enter')handleCmd()">
@@ -66,20 +67,21 @@
 
                 <div id="mirror" class="tab-content">
                     <div class="section-title">Split-View Mirroring</div>
-                    <input id="m1" placeholder="Left Pane URL">
-                    <input id="m2" placeholder="Right Pane URL">
+                    <input id="m1" placeholder="Left URL (e.g., Coursera)">
+                    <input id="m2" placeholder="Right URL (e.g., Research)">
                     <button onclick="buildMirror()">Initialize Split View</button>
                 </div>
 
                 <div id="sys" class="tab-content">
-                    <div class="section-title">Identity & Skin</div>
+                    <div class="section-title">Visuals</div>
                     <select id="skinSelect" onchange="updateSkin()">
                         <option value="default">Default Pro</option>
                         <option value="outlook">Outlook</option>
                         <option value="discord">Discord</option>
                         <option value="canvas">Canvas</option>
                     </select>
-                    <input id="tabNameIn" placeholder="Tab Title" oninput="updateIdentity()">
+                    <input id="tabNameIn" placeholder="New Tab Title" oninput="updateIdentity()">
+                    <div class="section-title">Emergency</div>
                     <button onclick="panicExport()" class="danger-btn">WIPE ALL DATA</button>
                 </div>
             </div>
