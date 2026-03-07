@@ -1,18 +1,17 @@
 let settings = { 
     vault: "", skin: "default", panicKey: "\\", panicUrl: "https://google.com",
     identity: { title: "404 Not Found" },
-    history: [], ghostVault: false
+    history: [], bookmarks: [], ghostVault: false, dmActive: false
 };
 
 let currentKey = "";
 let inputSeq = "";
-let sentinelInterval = null;
-let stream = null;
+let dmTimeout = null;
 let essayIndex = 0;
-const fakeEssay = "The implications of data structures in modern computational theory are vast. When analyzing the efficiency of a binary search tree, one must consider the temporal complexity of O(log n). This ensures that search operations remain efficient even as the dataset scales significantly. Furthermore, memory allocation strategies play a crucial role in preventing fragmentation. Resource management is at the heart of OS design...";
+const fakeEssay = "The implications of data structures in modern computational theory are vast. Binary search trees offer O(log n) temporal complexity. Resource management remains at the heart of OS design...";
 
 function init() {
-    const raw = localStorage.getItem('cloaker_v65');
+    const raw = localStorage.getItem('cloaker_v66');
     if(raw) settings = JSON.parse(raw);
     
     document.title = settings.identity.title;
@@ -20,7 +19,6 @@ function init() {
     
     if(document.getElementById('skinSelect')) {
         document.getElementById('skinSelect').value = settings.skin;
-        document.getElementById('tabNameIn').value = settings.identity.title;
         document.getElementById('panicUrlIn').value = settings.panicUrl;
         document.getElementById('ghostToggle').checked = settings.ghostVault;
     }
@@ -28,19 +26,19 @@ function init() {
     if(settings.ghostVault) document.getElementById('vaultNotes').classList.add('ghost-active');
     
     renderHistory();
+    renderBookmarks();
     startFakeLogs();
+    drawGraph();
 
     window.onkeydown = (e) => {
-        // Hotkey: Ctrl+B for Blur
+        resetDeadMan();
         if(e.key.toLowerCase() === 'b' && (e.ctrlKey || e.metaKey)) {
             e.preventDefault();
             toggleBlur();
         }
-        // Decoy Essay Mode
         const decoy = document.getElementById('decoyUI');
         if (decoy && decoy.style.display === 'block') {
-            const ticker = document.getElementById('liveTicker');
-            ticker.innerHTML = `<span style='color:#34495e'>${fakeEssay.substring(0, essayIndex)}|</span>`;
+            document.getElementById('liveTicker').innerHTML = `<span>${fakeEssay.substring(0, essayIndex)}|</span>`;
             essayIndex += 4;
             if (essayIndex > fakeEssay.length) essayIndex = 0;
         }
@@ -66,10 +64,69 @@ function verify() {
         document.getElementById('loginArea').style.display = 'none';
         document.getElementById('dashboard').style.display = 'block';
         decryptVault();
+        renderBookmarks();
     } else if(p === "301") {
         document.getElementById('mainUI').style.display = 'none';
         document.getElementById('decoyUI').style.display = 'block';
     }
+}
+
+function addBookmark() {
+    const name = prompt("Name:");
+    const url = prompt("URL:");
+    if(name && url && currentKey) {
+        const encryptedUrl = CryptoJS.AES.encrypt(url, currentKey).toString();
+        settings.bookmarks.push({ name, url: encryptedUrl });
+        save(); renderBookmarks();
+    } else { alert("Unlock with Key first."); }
+}
+
+function renderBookmarks() {
+    const list = document.getElementById('bookmarkList');
+    if(list) list.innerHTML = settings.bookmarks.map((bm, i) => `
+        <div class="bm-item" onclick="launchBookmark('${bm.url}')">
+            <span>🔖 ${bm.name}</span>
+            <span onclick="deleteBookmark(${i}); event.stopPropagation();" style="color:var(--danger); opacity:0.5;">[X]</span>
+        </div>`).join('');
+}
+
+function launchBookmark(encUrl) {
+    try {
+        const bytes = CryptoJS.AES.decrypt(encUrl, currentKey);
+        launch(bytes.toString(CryptoJS.enc.Utf8));
+    } catch(e) { alert("Decryption Error."); }
+}
+
+function deleteBookmark(i) { settings.bookmarks.splice(i, 1); save(); renderBookmarks(); }
+
+function startDeadMan() {
+    const mins = document.getElementById('dmTimer').value;
+    if(!mins) return;
+    settings.dmActive = true;
+    resetDeadMan();
+    document.getElementById('dmStatus').textContent = `Armed: ${mins}m limit`;
+    document.getElementById('dmStatus').style.color = "var(--danger)";
+}
+
+function resetDeadMan() {
+    if(!settings.dmActive) return;
+    clearTimeout(dmTimeout);
+    const ms = document.getElementById('dmTimer').value * 60000;
+    dmTimeout = setTimeout(() => window.location.replace(settings.panicUrl), ms);
+}
+
+function drawGraph() {
+    const canvas = document.getElementById('integrityGraph');
+    if(!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let points = Array(50).fill(25);
+    setInterval(() => {
+        points.shift(); points.push(Math.random() * 40 + 5);
+        ctx.clearRect(0,0,400,50);
+        ctx.beginPath(); ctx.strokeStyle = '#0f0';
+        for(let i=0; i<points.length; i++) ctx.lineTo(i * 8, points[i]);
+        ctx.stroke();
+    }, 150);
 }
 
 async function toggleSentinel() {
@@ -78,21 +135,11 @@ async function toggleSentinel() {
     const video = document.getElementById('sentinelFeed');
     if (active) {
         try {
-            stream = await navigator.mediaDevices.getUserMedia({ video: { width: 160, height: 120 } });
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
             video.srcObject = stream;
             status.textContent = "Camera: ACTIVE";
-            status.style.color = "var(--success)";
-            sentinelInterval = setInterval(() => {
-                if (document.hidden && !document.body.classList.contains('blur-active')) toggleBlur();
-            }, 2000);
-        } catch (err) {
-            status.textContent = "Camera: ERROR";
-            document.getElementById('sentinelToggle').checked = false;
-        }
-    } else {
-        if (stream) stream.getTracks().forEach(t => t.stop());
-        clearInterval(sentinelInterval);
-        status.textContent = "Camera: Standby";
+            setInterval(() => { if (document.hidden) toggleBlur(); }, 2000);
+        } catch (err) { status.textContent = "Camera: ERROR"; }
     }
 }
 
@@ -101,9 +148,8 @@ function launch(url) {
     if(!t) return;
     const mode = document.getElementById('stealthMode').value;
     if(mode === 'null') {
-        const meta = '<meta name="referrer" content="no-referrer">';
         const script = `<script>window.location.replace("${t}");<\/script>`;
-        t = 'data:text/html;base64,' + btoa(meta + script);
+        t = 'data:text/html;base64,' + btoa('<meta name="referrer" content="no-referrer">' + script);
     } else if(mode === 'proxy') {
         t = `https://api.allorigins.win/raw?url=${encodeURIComponent(t)}`;
     }
@@ -134,10 +180,9 @@ function handleCmd() {
     const cmd = input.value.trim().toLowerCase();
     input.value = '';
     out.innerHTML += `\n<span style="color:#666">$ ${cmd}</span>`;
-    if(cmd === 'help') out.innerHTML += `\n- launch [url]\n- logs\n- clear\n- blur`;
+    if(cmd === 'help') out.innerHTML += `\n- launch [url]\n- clear\n- blur`;
     else if(cmd === 'blur') toggleBlur();
     else if(cmd === 'clear') out.innerHTML = 'GhostOS Ready...';
-    else out.innerHTML += `\nCommand unknown.`;
     out.scrollTop = out.scrollHeight;
 }
 
@@ -157,9 +202,8 @@ function closeMirror() {
 }
 
 function saveVault() {
-    const txt = document.getElementById('vaultNotes').value;
     if(currentKey) {
-        settings.vault = CryptoJS.AES.encrypt(txt, currentKey).toString();
+        settings.vault = CryptoJS.AES.encrypt(document.getElementById('vaultNotes').value, currentKey).toString();
         save();
     }
 }
@@ -169,30 +213,29 @@ function decryptVault() {
         try {
             const bytes = CryptoJS.AES.decrypt(settings.vault, currentKey);
             document.getElementById('vaultNotes').value = bytes.toString(CryptoJS.enc.Utf8);
-        } catch(e) { console.warn("Access Denied."); }
+        } catch(e) {}
     }
 }
 
 function renderHistory() {
     const list = document.getElementById('historyList');
-    if(list) list.innerHTML = settings.history.map(h => `<div class="hist-item" onclick="launch('${h}')"><span>${h.substring(0,40)}...</span><span>GO ↗</span></div>`).join('');
+    if(list) list.innerHTML = settings.history.map(h => `<div class="hist-item" onclick="launch('${h}')"><span>${h.substring(0,35)}...</span><span>GO ↗</span></div>`).join('');
 }
 
 function startFakeLogs() {
-    const assets = ['/favicon.ico', '/robots.txt', '/sitemap.xml', '/assets/css/main.css', '/js/vendor.js'];
+    const assets = ['/favicon.ico', '/robots.txt', '/sitemap.xml'];
     setInterval(() => {
         if (document.getElementById('shadow').style.display !== 'none') {
-            const file = assets[Math.floor(Math.random() * assets.length)];
-            console.error(`GET ${window.location.origin}${file} 404 (Not Found)`);
+            console.error(`GET ${window.location.origin}${assets[Math.floor(Math.random() * assets.length)]} 404 (Not Found)`);
         }
     }, 8000);
 }
 
-function clearHistory() { if(confirm("Clear history?")) { settings.history = []; save(); renderHistory(); } }
+function clearHistory() { settings.history = []; save(); renderHistory(); }
 function updateSkin() { settings.skin = document.getElementById('skinSelect').value; document.body.setAttribute('data-skin', settings.skin); save(); }
 function updateIdentity() { settings.identity.title = document.getElementById('tabNameIn').value || "404 Not Found"; document.title = settings.identity.title; save(); }
 function updatePanicUrl() { settings.panicUrl = document.getElementById('panicUrlIn').value || "https://google.com"; save(); }
-function save() { localStorage.setItem('cloaker_v65', JSON.stringify(settings)); }
+function save() { localStorage.setItem('cloaker_v66', JSON.stringify(settings)); }
 function openTab(id) {
     document.querySelectorAll('.tab-content, .tab-btn').forEach(el => el.classList.remove('active'));
     document.getElementById(id).classList.add('active');

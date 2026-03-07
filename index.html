@@ -26,7 +26,6 @@
                 <div class="res-item" onclick="alert('Downloading: Lecture_Notes_Week_7.pdf...')">📄 Lecture_Notes_Week_7.pdf</div>
                 <div class="res-item" onclick="alert('Opening: Syllabus_Spring_2026.pdf...')">📄 Syllabus_Spring_2026.pdf</div>
                 <div class="res-item" onclick="alert('Opening: Midterm_Review_Guide.pdf...')">📄 Midterm_Review_Guide.pdf</div>
-                <div class="res-item" onclick="alert('Accessing: Supplemental_Reading_List.txt...')">📄 Supplemental_Reading.txt</div>
             </div>
             <button onclick="location.reload()" class="exit-btn">Sign Out</button>
         </div>
@@ -58,6 +57,12 @@
                         </select>
                         <button onclick="launch()" class="success-btn">Go</button>
                     </div>
+
+                    <div class="section-title" style="display:flex; justify-content:space-between;">
+                        <span>Shadow Bookmarks</span>
+                        <span onclick="addBookmark()" style="cursor:pointer; color:var(--accent);">[ + ADD ]</span>
+                    </div>
+                    <div id="bookmarkList" class="history-container" style="background:rgba(26,115,232,0.05);"></div>
                     
                     <div class="section-title" style="display:flex; justify-content:space-between;">
                         <span>Recent Sessions</span>
@@ -75,7 +80,8 @@
                 </div>
 
                 <div id="term" class="tab-content">
-                    <div id="terminalOutput">GhostOS v65.1 Ready...</div>
+                    <canvas id="integrityGraph" width="400" height="50"></canvas>
+                    <div id="terminalOutput">GhostOS v66.0 Ready...</div>
                     <div class="terminal-input-line">
                         <span>$</span>
                         <input id="termInput" autocomplete="off" onkeydown="if(event.key==='Enter')handleCmd()">
@@ -99,14 +105,19 @@
                     </select>
                     <input id="tabNameIn" placeholder="Tab Title" oninput="updateIdentity()">
                     
-                    <div class="section-title">Panic Settings</div>
+                    <div class="section-title">Panic / Dead Man</div>
                     <input id="panicUrlIn" placeholder="Panic Redirect URL" oninput="updatePanicUrl()">
+                    <div style="display:flex; gap:10px; align-items:center;">
+                        <input type="number" id="dmTimer" placeholder="Min" style="width:60px;">
+                        <button onclick="startDeadMan()" style="font-size:0.6rem; padding:5px;">Arm Dead Man</button>
+                    </div>
+                    <p id="dmStatus" style="font-size:0.5rem; color:#888;">Status: Disarmed</p>
                     
                     <div class="section-title">Sentinel AI (Beta)</div>
                     <label style="font-size:0.6rem; cursor:pointer; display:flex; align-items:center; gap:5px;">
-                        <input type="checkbox" id="sentinelToggle" onchange="toggleSentinel()"> ENABLE AUTO-BLUR (CAM)
+                        <input type="checkbox" id="sentinelToggle" onchange="toggleSentinel()"> ENABLE AUTO-BLUR
                     </label>
-                    <p id="sentinelStatus" style="font-size:0.5rem; color:#888; margin-top:5px;">Camera: Standby</p>
+                    <p id="sentinelStatus" style="font-size:0.5rem; color:#888;">Camera: Standby</p>
                     <video id="sentinelFeed" style="display:none;" autoplay playsinline></video>
 
                     <button onclick="panicExport()" class="danger-btn" style="margin-top:20px;">WIPE ALL DATA</button>
