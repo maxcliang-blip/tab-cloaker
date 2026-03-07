@@ -18,14 +18,13 @@
     </div>
 
     <div id="decoyUI" style="display:none;">
-        <div id="liveTicker"><span>UNIVERSITY PORTAL // COURSE: CS301 DATA STRUCTURES // ASMT_STATUS: SUBMITTED...</span></div>
+        <div id="liveTicker"><span>PORTAL // CS301 DATA STRUCTURES // ASMT_STATUS: SUBMITTED...</span></div>
         <div class="decoy-container">
-            <h2 style="color:#2c3e50; margin-bottom: 5px;">Course Resources: CS301</h2>
-            <p style="font-size: 0.7rem; color: #7f8c8d; margin-bottom: 20px;">Authenticated Session: s_user_88291</p>
+            <h2 style="color:#2c3e50;">Course Resources: CS301</h2>
             <div class="resource-list">
-                <div class="res-item" onclick="alert('Downloading: Lecture_Notes_Week_7.pdf...')">📄 Lecture_Notes_Week_7.pdf</div>
-                <div class="res-item" onclick="alert('Opening: Syllabus_Spring_2026.pdf...')">📄 Syllabus_Spring_2026.pdf</div>
-                <div class="res-item" onclick="alert('Opening: Midterm_Review_Guide.pdf...')">📄 Midterm_Review_Guide.pdf</div>
+                <div class="res-item" onclick="alert('Downloading...')">📄 Lecture_Notes_Week_7.pdf</div>
+                <div class="res-item" onclick="alert('Opening...')">📄 Syllabus_Spring_2026.pdf</div>
+                <div class="res-item" onclick="alert('Opening...')">📄 Midterm_Review_Guide.pdf</div>
             </div>
             <button onclick="location.reload()" class="exit-btn">Sign Out</button>
         </div>
@@ -47,96 +46,82 @@
                 </div>
 
                 <div id="core" class="tab-content active">
-                    <div class="section-title">Ghost Launcher</div>
+                    <div class="section-title">Launcher & Cammo</div>
                     <div class="launcher-grid">
                         <input type="text" id="target" placeholder="https://...">
                         <select id="stealthMode">
                             <option value="direct">Direct</option>
                             <option value="null">Null-Ref</option>
-                            <option value="proxy">Proxy</option>
                         </select>
                         <button onclick="launch()" class="success-btn">Go</button>
                     </div>
+                    
+                    <select id="cammoSelect">
+                        <option value="none">Skin: Original</option>
+                        <option value="wiki">Skin: Wikipedia</option>
+                        <option value="docs">Skin: Google Docs</option>
+                        <option value="canvas">Skin: Canvas LMS</option>
+                    </select>
 
-                    <div class="section-title" style="display:flex; justify-content:space-between;">
-                        <span>Shadow Bookmarks</span>
-                        <span onclick="addBookmark()" style="cursor:pointer; color:var(--accent);">[ + ADD ]</span>
-                    </div>
-                    <div id="bookmarkList" class="history-container" style="background:rgba(26,115,232,0.05);"></div>
+                    <div class="section-title">Shadow Bookmarks <span onclick="addBookmark()" style="float:right; cursor:pointer;">[+]</span></div>
+                    <div id="bookmarkList" class="history-container"></div>
                     
-                    <div class="section-title" style="display:flex; justify-content:space-between;">
-                        <span>Recent Sessions</span>
-                        <span onclick="clearHistory()" style="cursor:pointer; color:var(--danger); font-size:0.5rem;">[ WIPE ]</span>
-                    </div>
-                    <div id="historyList" class="history-container"></div>
-                    
-                    <div class="section-title" style="display:flex; justify-content:space-between;">
-                        <span>Encrypted Vault</span>
-                        <label style="font-size:0.5rem; cursor:pointer; color:var(--accent);">
-                            <input type="checkbox" id="ghostToggle" onchange="toggleGhostMode()"> GHOST MODE
-                        </label>
-                    </div>
+                    <div class="section-title">Encrypted Vault</div>
                     <textarea id="vaultNotes" oninput="saveVault()" placeholder="Auto-encrypting..."></textarea>
                 </div>
 
                 <div id="term" class="tab-content">
                     <canvas id="integrityGraph" width="400" height="50"></canvas>
-                    <div id="terminalOutput">GhostOS v66.0 Ready...</div>
+                    <div id="terminalOutput">GhostOS v67.0 System Online...</div>
                     <div class="terminal-input-line">
-                        <span>$</span>
-                        <input id="termInput" autocomplete="off" onkeydown="if(event.key==='Enter')handleCmd()">
+                        <span>$</span><input id="termInput" autocomplete="off" onkeydown="if(event.key==='Enter')handleCmd()">
                     </div>
                 </div>
 
                 <div id="mirror" class="tab-content">
-                    <div class="section-title">Split-View Mirroring</div>
-                    <input id="m1" placeholder="Left Side URL">
-                    <input id="m2" placeholder="Right Side URL">
-                    <button onclick="buildMirror()">Initialize Split</button>
+                    <div class="section-title">Split Mirror</div>
+                    <input id="m1" placeholder="Left URL">
+                    <input id="m2" placeholder="Right URL">
+                    <button onclick="buildMirror()">Initialize</button>
                 </div>
 
                 <div id="sys" class="tab-content">
-                    <div class="section-title">Visuals</div>
+                    <div class="section-title">Identity</div>
                     <select id="skinSelect" onchange="updateSkin()">
-                        <option value="default">Default Pro</option>
+                        <option value="default">Default</option>
                         <option value="outlook">Outlook</option>
                         <option value="discord">Discord</option>
-                        <option value="canvas">Canvas</option>
                     </select>
-                    <input id="tabNameIn" placeholder="Tab Title" oninput="updateIdentity()">
                     
                     <div class="section-title">Panic / Dead Man</div>
-                    <input id="panicUrlIn" placeholder="Panic Redirect URL" oninput="updatePanicUrl()">
-                    <div style="display:flex; gap:10px; align-items:center;">
+                    <input id="panicUrlIn" placeholder="Panic Redirect" oninput="updatePanicUrl()">
+                    <div style="display:flex; gap:5px; align-items:center;">
                         <input type="number" id="dmTimer" placeholder="Min" style="width:60px;">
-                        <button onclick="startDeadMan()" style="font-size:0.6rem; padding:5px;">Arm Dead Man</button>
+                        <button onclick="startDeadMan()" style="font-size:0.6rem;">Arm DM</button>
                     </div>
-                    <p id="dmStatus" style="font-size:0.5rem; color:#888;">Status: Disarmed</p>
-                    
-                    <div class="section-title">Sentinel AI (Beta)</div>
-                    <label style="font-size:0.6rem; cursor:pointer; display:flex; align-items:center; gap:5px;">
-                        <input type="checkbox" id="sentinelToggle" onchange="toggleSentinel()"> ENABLE AUTO-BLUR
-                    </label>
-                    <p id="sentinelStatus" style="font-size:0.5rem; color:#888;">Camera: Standby</p>
+
+                    <div class="section-title">Sentinel AI</div>
+                    <label style="font-size:0.6rem;"><input type="checkbox" id="sentinelToggle" onchange="toggleSentinel()"> Enable Auto-Blur</label>
                     <video id="sentinelFeed" style="display:none;" autoplay playsinline></video>
 
-                    <button onclick="panicExport()" class="danger-btn" style="margin-top:20px;">WIPE ALL DATA</button>
+                    <button onclick="panicExport()" class="danger-btn" style="margin-top:20px;">Wipe Session</button>
                 </div>
             </div>
         </div>
 
         <div id="mirrorView" style="display:none;">
-            <div class="mirror-bar"><button onclick="closeMirror()">X Close Mirror</button></div>
-            <div class="mirror-grid">
+            <div class="mirror-bar">
+                <button onclick="toggleGrayscale()" style="background:#444;">B/W</button>
+                <button onclick="closeMirror()" style="background:var(--danger);">X</button>
+            </div>
+            <div id="mirrorWrapper" class="mirror-grid">
                 <iframe id="frameLeft"></iframe>
                 <iframe id="frameRight"></iframe>
             </div>
         </div>
     </div>
 
-    <div id="blurOverlay" onclick="toggleBlur()" style="display:none;">
-        <div style="background:rgba(0,0,0,0.8); padding:20px; border-radius:10px; color:white;">SYSTEM PAUSED</div>
-    </div>
+    <div id="blurOverlay" onclick="toggleBlur()" style="display:none;">SYSTEM PAUSED</div>
 
     <script src="script.js"></script>
 </body>
