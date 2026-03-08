@@ -16,6 +16,14 @@ body[data-skin="discord"] {
     --input-bg: #40444b;
 }
 
+body[data-profile="research"] {
+    --accent: #34a853;
+}
+
+body[data-profile="dev"] {
+    --accent: #fbbc05;
+}
+
 body {
     margin: 0;
     font-family: 'Segoe UI', sans-serif;
@@ -41,19 +49,12 @@ body {
     z-index: 1;
 }
 
-#shadow hr {
-    border: 0;
-    border-top: 1px solid #ccc;
-    margin: 1em 0;
-}
-
 .container {
     background: var(--panel-bg);
     padding: 20px;
     border-radius: 12px;
     border: 1px solid var(--panel-border);
     width: 450px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
     z-index: 100;
     transition: filter 0.3s;
 }
@@ -87,7 +88,6 @@ body {
     display: block;
 }
 
-/* Network Heartbeat */
 #netHeartbeat {
     width: 10px;
     height: 10px;
@@ -117,7 +117,7 @@ body {
 }
 
 #terminalOutput {
-    height: 150px;
+    height: 140px;
     overflow-y: auto;
     color: #0f0;
     background: #000;
@@ -139,24 +139,41 @@ body {
     border: none;
     color: #fff;
     outline: none;
-    margin: 0;
     font-size: 0.7rem;
     width: 100%;
 }
 
+.bm-item {
+    font-size: 0.7rem;
+    padding: 6px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    display: flex;
+    justify-content: space-between;
+    cursor: pointer;
+    color: var(--accent);
+}
+
+.history-container {
+    background: rgba(0, 0, 0, 0.03);
+    border-radius: 4px;
+    max-height: 80px;
+    overflow-y: auto;
+    margin: 5px 0;
+}
+
 .switch-label {
     display: block;
-    font-size: 0.65rem;
-    color: #666;
-    margin: 10px 0;
+    font-size: 0.6rem;
+    margin: 8px 0;
     cursor: pointer;
+    color: #666;
 }
 
 .section-title {
     font-size: 0.6rem;
     color: #888;
     text-transform: uppercase;
-    margin-top: 15px;
+    margin-top: 12px;
     border-bottom: 1px solid var(--panel-border);
 }
 
@@ -191,54 +208,12 @@ button {
     display: flex;
     align-items: center;
     justify-content: center;
-    backdrop-filter: blur(35px);
+    backdrop-filter: blur(40px);
+    background: rgba(0, 0, 0, 0.1);
     color: white;
-    background: rgba(0, 0, 0, 0.2);
 }
 
 .blur-active .container {
-    filter: blur(40px);
+    filter: blur(45px);
     pointer-events: none;
-}
-
-.bm-item {
-    font-size: 0.7rem;
-    padding: 6px;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    cursor: pointer;
-    color: var(--accent);
-}
-
-.bm-item:hover {
-    background: rgba(0, 0, 0, 0.02);
-}
-
-.bm-delete {
-    color: var(--danger);
-    font-size: 0.5rem;
-    opacity: 0.5;
-    padding: 2px 5px;
-}
-
-.bm-delete:hover {
-    opacity: 1;
-}
-
-#profileStatus {
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    font-weight: bold;
-    opacity: 0.7;
-}
-
-/* Optional: Different accent colors per profile */
-body[data-profile="research"] {
-    --accent: #34a853;
-}
-
-body[data-profile="dev"] {
-    --accent: #fbbc05;
 }

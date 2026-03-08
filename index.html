@@ -9,7 +9,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 </head>
 
-<body onload="init()" data-skin="default">
+<body onload="init()" data-skin="default" data-profile="default">
 
     <div id="shadow">
         <h1>Not Found</h1>
@@ -39,29 +39,24 @@
                         <button onclick="launch()" class="success-btn">Go</button>
                     </div>
 
-                    <div class="section-title" style="display:flex; justify-content:space-between; align-items:center;">
+                    <div class="section-title" style="display:flex; justify-content:space-between;">
                         <span>Shadow Bookmarks</span>
-                        <span onclick="addBookmark()" style="cursor:pointer; color:var(--accent); font-weight:bold;">[ +
-                            ADD ]</span>
+                        <span onclick="addBookmark()" style="cursor:pointer; color:var(--accent);">[ + ]</span>
                     </div>
-                    <div id="bookmarkList" class="history-container"
-                        style="background:rgba(26,115,232,0.05); min-height:40px;">
-                    </div>
-
-                    <div class="section-title">Shadow Print</div>
-                    <button onclick="shadowPrint()" style="background:#666; font-size:0.6rem;">Generate Decoy
-                        Paperwork</button>
+                    <div id="bookmarkList" class="history-container"></div>
 
                     <div class="section-title">Encrypted Vault</div>
-                    <textarea id="vaultNotes" oninput="saveVault()" placeholder="Auto-encrypting..."></textarea>
+                    <textarea id="vaultNotes" oninput="saveVault()" placeholder="Notes..."></textarea>
+                    <button onclick="shadowPrint()" style="margin-top:5px; font-size:0.6rem; background:#666;">Print
+                        Decoy PDF</button>
                 </div>
 
                 <div id="term" class="tab-content">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
                         <canvas id="integrityGraph" width="300" height="40"></canvas>
-                        <div id="netHeartbeat" title="Network Load Monitor"></div>
+                        <div id="netHeartbeat"></div>
                     </div>
-                    <div id="terminalOutput">GhostOS v68.0 Phantom Link Online...</div>
+                    <div id="terminalOutput">GhostOS v68.0 Phantom Online...</div>
                     <div class="terminal-input-line">
                         <span>$</span><input id="termInput" autocomplete="off"
                             onkeydown="if(event.key==='Enter')handleCmd()">
@@ -69,35 +64,28 @@
                 </div>
 
                 <div id="sys" class="tab-content">
-                    <div class="section-title">Phantom Protocols</div>
-                    <label class="switch-label">
-                        <input type="checkbox" id="autoSwitchToggle" onchange="toggleAutoSwitch()"> Auto-Panic on Tab
-                        Switch
-                    </label>
-                    <label class="switch-label">
-                        <input type="checkbox" id="focusBlurToggle" onchange="toggleFocusBlur()"> Focus-Aware Blur
-                    </label>
+                    <div class="section-title">Identity & Profiles</div>
+                    <select id="profileSelect" onchange="switchProfile()">
+                        <option value="default">Default Profile</option>
+                        <option value="research">Research Profile</option>
+                        <option value="dev">Dev Profile</option>
+                    </select>
+                    <button onclick="renameProfile()" style="font-size:0.6rem; margin-top:5px;">Set Tab Title</button>
 
-                    <div class="section-title">Panic / Dead Man</div>
-                    <input id="panicUrlIn" placeholder="Panic Redirect URL" oninput="updatePanicUrl()">
+                    <div class="section-title">Automated Security</div>
+                    <label class="switch-label"><input type="checkbox" id="autoSwitchToggle"
+                            onchange="toggleAutoSwitch()"> Panic on Tab Switch</label>
+                    <label class="switch-label"><input type="checkbox" id="focusBlurToggle"
+                            onchange="toggleFocusBlur()"> Blur on Unfocus</label>
+
+                    <div class="section-title">Panic Configuration</div>
+                    <input id="panicUrlIn" placeholder="Redirect URL" oninput="updatePanicUrl()">
                     <div style="display:flex; gap:5px;">
                         <input type="number" id="dmTimer" placeholder="Min" style="width:60px;">
                         <button onclick="startDeadMan()">Arm DM</button>
                     </div>
-                    <p id="dmStatus" style="font-size:0.5rem; color:#888;">Status: Inactive</p>
-
-                    <button onclick="panicExport()" class="danger-btn" style="margin-top:20px;">Wipe All Data</button>
-                    <div class="section-title">Identity & Profiles</div>
-                    <div style="display:flex; gap:5px; align-items:center;">
-                        <select id="profileSelect" onchange="switchProfile()">
-                            <option value="default">Profile: Default</option>
-                            <option value="research">Profile: Research</option>
-                            <option value="dev">Profile: Development</option>
-                        </select>
-                        <button onclick="renameProfile()" style="width:50px; font-size:0.5rem;">Edit</button>
-                    </div>
-                    <p id="profileStatus" style="font-size:0.5rem; color:var(--accent); margin-top:4px;">Active: Default
-                    </p>
+                    <button onclick="panicExport()" class="danger-btn" style="margin-top:15px;">Wipe
+                        LocalStorage</button>
                 </div>
             </div>
         </div>
