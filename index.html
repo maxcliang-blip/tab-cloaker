@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +8,7 @@
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 </head>
+
 <body onload="init()" data-skin="default">
 
     <div id="shadow">
@@ -36,9 +38,19 @@
                         <input type="text" id="target" placeholder="Target URL...">
                         <button onclick="launch()" class="success-btn">Go</button>
                     </div>
-                    
+
+                    <div class="section-title" style="display:flex; justify-content:space-between; align-items:center;">
+                        <span>Shadow Bookmarks</span>
+                        <span onclick="addBookmark()" style="cursor:pointer; color:var(--accent); font-weight:bold;">[ +
+                            ADD ]</span>
+                    </div>
+                    <div id="bookmarkList" class="history-container"
+                        style="background:rgba(26,115,232,0.05); min-height:40px;">
+                    </div>
+
                     <div class="section-title">Shadow Print</div>
-                    <button onclick="shadowPrint()" style="background:#666; font-size:0.6rem;">Generate Decoy Paperwork</button>
+                    <button onclick="shadowPrint()" style="background:#666; font-size:0.6rem;">Generate Decoy
+                        Paperwork</button>
 
                     <div class="section-title">Encrypted Vault</div>
                     <textarea id="vaultNotes" oninput="saveVault()" placeholder="Auto-encrypting..."></textarea>
@@ -51,19 +63,21 @@
                     </div>
                     <div id="terminalOutput">GhostOS v68.0 Phantom Link Online...</div>
                     <div class="terminal-input-line">
-                        <span>$</span><input id="termInput" autocomplete="off" onkeydown="if(event.key==='Enter')handleCmd()">
+                        <span>$</span><input id="termInput" autocomplete="off"
+                            onkeydown="if(event.key==='Enter')handleCmd()">
                     </div>
                 </div>
 
                 <div id="sys" class="tab-content">
                     <div class="section-title">Phantom Protocols</div>
                     <label class="switch-label">
-                        <input type="checkbox" id="autoSwitchToggle" onchange="toggleAutoSwitch()"> Auto-Panic on Tab Switch
+                        <input type="checkbox" id="autoSwitchToggle" onchange="toggleAutoSwitch()"> Auto-Panic on Tab
+                        Switch
                     </label>
                     <label class="switch-label">
                         <input type="checkbox" id="focusBlurToggle" onchange="toggleFocusBlur()"> Focus-Aware Blur
                     </label>
-                    
+
                     <div class="section-title">Panic / Dead Man</div>
                     <input id="panicUrlIn" placeholder="Panic Redirect URL" oninput="updatePanicUrl()">
                     <div style="display:flex; gap:5px;">
@@ -73,6 +87,17 @@
                     <p id="dmStatus" style="font-size:0.5rem; color:#888;">Status: Inactive</p>
 
                     <button onclick="panicExport()" class="danger-btn" style="margin-top:20px;">Wipe All Data</button>
+                    <div class="section-title">Identity & Profiles</div>
+                    <div style="display:flex; gap:5px; align-items:center;">
+                        <select id="profileSelect" onchange="switchProfile()">
+                            <option value="default">Profile: Default</option>
+                            <option value="research">Profile: Research</option>
+                            <option value="dev">Profile: Development</option>
+                        </select>
+                        <button onclick="renameProfile()" style="width:50px; font-size:0.5rem;">Edit</button>
+                    </div>
+                    <p id="profileStatus" style="font-size:0.5rem; color:var(--accent); margin-top:4px;">Active: Default
+                    </p>
                 </div>
             </div>
         </div>
@@ -82,4 +107,5 @@
 
     <script src="script.js"></script>
 </body>
+
 </html>
